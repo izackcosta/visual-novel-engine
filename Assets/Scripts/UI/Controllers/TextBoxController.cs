@@ -13,12 +13,12 @@ public class TextBoxController : MonoBehaviour
 
     private void OnEnable()
     {
-        _sendTextToTextBoxEvent._listeners += OnTextReceived;
+        _sendTextToTextBoxEvent.Listeners += OnTextReceived;
     }
 
     private void OnDisable()
     {
-        _sendTextToTextBoxEvent._listeners -= OnTextReceived;
+        _sendTextToTextBoxEvent.Listeners -= OnTextReceived;
     }
 
     private void Awake()

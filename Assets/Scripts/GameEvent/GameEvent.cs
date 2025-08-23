@@ -7,6 +7,8 @@ using UnityEngine.Events;
 public class GameEvent : ScriptableObject
 {
 
-    public event UnityAction<GameEventType> _listeners = delegate { };
+    public event UnityAction<GameEventType> Listeners = delegate { };
+
+    public void Invoke(GameEventType @event) => Listeners.Invoke(@event);
 
 }
