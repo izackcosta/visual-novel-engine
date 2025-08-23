@@ -1,0 +1,17 @@
+.frame {
+    background-color: rgb(0, 0, 0);
+    border-left-color: rgb(255, 255, 255);
+    border-right-color: rgb(255, 255, 255);
+    border-top-color: rgb(255, 255, 255);
+    border-bottom-color: rgb(255, 255, 255);
+    border-top-width: 4px;
+    border-right-width: 4px;
+    border-bottom-width: 4px;
+    border-left-width: 4px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: normal;
+}

@@ -1,0 +1,6 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/style.uss?fileID=7433441132597879392&amp;guid=b8730ada8383c494683a0a0f4464e693&amp;type=3#style" />
+    <engine:VisualElement name="Root" style="flex-grow: 1; flex-direction: column; align-items: center; justify-content: flex-end;">
+        <engine:Label name="TextArea" class="frame" style="bottom: 50px; width: 800px; height: 200px; padding-top: 5px; padding-right: 5px; padding-bottom: 5px; padding-left: 5px; font-size: 22px; white-space: pre-wrap;" />
+    </engine:VisualElement>
+</engine:UXML>
