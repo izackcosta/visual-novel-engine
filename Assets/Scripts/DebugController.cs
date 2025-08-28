@@ -14,7 +14,8 @@ public class DebugController : MonoBehaviour
         {
             var text = $"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam at neque a purus viverra laoreet nec sit amet nisl." +
                 $" Duis placerat facilisis fringilla. Quisque volutpat suscipit metus, sed pretium urna auctor in.";
-            _sendTextToTextBoxEvent.Invoke(new StringGameEvent(text));
+            var characterName = "Maria";
+            _sendTextToTextBoxEvent.Invoke(new SendTextToTextBoxGameEvent(text, characterName));
         }
     }
 

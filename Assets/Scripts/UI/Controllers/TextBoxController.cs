@@ -29,8 +29,10 @@ public class TextBoxController : Controller<TextBoxView>
 
     private void OnTextReceived(GameEventType @event) 
     {
-        var text = ((StringGameEvent)@event).Value;
-        _view.SetTextBoxVisibility(true);
+        var text = ((SendTextToTextBoxGameEvent)@event).text;
+        var characterName = ((SendTextToTextBoxGameEvent)@event).characterName;
+        _view.SetCharacterName(characterName);
+        _view.Show();
         WriteText(text).Forget();
     }
 
@@ -49,6 +51,7 @@ public class TextBoxController : Controller<TextBoxView>
         }
         _view.SetText(fullText);
         _isWriting = false;
+        //Debug.Log(_view.GetText());
     }
 
     private void OnClickTextBox(ClickEvent clickEvent) 

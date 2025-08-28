@@ -16,4 +16,8 @@ public abstract class View : MonoBehaviour
             _root = _document.rootVisualElement;
     }
 
+    public abstract void Show();
+
+    public abstract void Hide();
+
 }
