@@ -8,8 +8,15 @@ public class DebugController : MonoBehaviour
     [SerializeField]
     private GameEvent _sendTextToTextBoxEvent;
 
+    [SerializeField]
+    private GameEvent _changeBackgroundEvent;
+
+    [SerializeField]
+    private Sprite _newBackground;
+
     private void Update()
     {
+
         if(Input.GetKeyDown(KeyCode.D))
         {
             var text = $"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam at neque a purus viverra laoreet nec sit amet nisl." +
@@ -17,6 +24,12 @@ public class DebugController : MonoBehaviour
             var characterName = "Maria";
             _sendTextToTextBoxEvent.Invoke(new SendTextToTextBoxGameEvent(text, characterName));
         }
+
+        if(Input.GetKeyDown(KeyCode.B))
+        {
+            _changeBackgroundEvent.Invoke(new SpriteGameEvent(_newBackground));
+        }
+
     }
 
 #endif

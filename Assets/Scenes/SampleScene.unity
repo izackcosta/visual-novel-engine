@@ -197,6 +197,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _sendTextToTextBoxEvent: {fileID: 11400000, guid: 290ced3f64fc8324c94e4e3ebe2a6f47, type: 2}
+  _changeBackgroundEvent: {fileID: 11400000, guid: e465b88946c008b4bb66324b559f28f7, type: 2}
+  _newBackground: {fileID: 21300000, guid: c2f424c8065b77e4eb8ee93e1780ce3d, type: 3}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,6 +426,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1897686627}
+  - component: {fileID: 1897686629}
   - component: {fileID: 1897686628}
   m_Layer: 0
   m_Name: Background
@@ -502,6 +505,19 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1897686629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897686626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3132a01895cd96543b6231a9be9b3820, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _changeBackgroundEvent: {fileID: 11400000, guid: e465b88946c008b4bb66324b559f28f7, type: 2}
 --- !u!1 &1902181816
 GameObject:
   m_ObjectHideFlags: 0

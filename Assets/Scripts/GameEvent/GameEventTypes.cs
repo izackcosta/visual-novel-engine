@@ -21,6 +21,18 @@ public struct StringGameEvent : SingleArgumentGameEventType<string>
 
 }
 
+public struct SpriteGameEvent : SingleArgumentGameEventType<Sprite>
+{
+
+    public Sprite Value { get; private set; }
+
+    public SpriteGameEvent(Sprite value)
+    {
+        Value = value;
+    }
+
+}
+
 public struct SendTextToTextBoxGameEvent : GameEventType
 {
 
