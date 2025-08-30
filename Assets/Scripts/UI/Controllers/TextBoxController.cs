@@ -9,7 +9,7 @@ public class TextBoxController : Controller<TextBoxView>
     [SerializeField]
     private GameEvent _sendTextToTextBoxEvent;
 
-    private const int TextBoxDelay = 50;
+    private const int TextBoxDelay = 10;
 
     private bool _isWriting = false;
 

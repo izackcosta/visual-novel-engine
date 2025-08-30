@@ -1,7 +1,7 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/style.uss?fileID=7433441132597879392&amp;guid=b8730ada8383c494683a0a0f4464e693&amp;type=3#style" />
     <engine:VisualElement name="Root" style="flex-grow: 1; flex-direction: column; align-items: center; justify-content: flex-end; visibility: visible;">
-        <engine:Label name="TextArea" text="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" class="frame" style="bottom: 9%; width: 75%; height: 25%; padding-top: 1%; padding-right: 5px; padding-bottom: 5px; padding-left: 5px; font-size: 25%; white-space: normal; visibility: visible;" />
-        <engine:Label name="NameBox" text="AAAAAAA" class="frame" style="position: absolute; bottom: 32.75%; right: auto; width: 15%; -unity-text-align: upper-center; -unity-font-style: bold; visibility: visible; font-size: 22px; left: 15%;" />
+        <engine:Label name="TextArea" text="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" class="frame" style="bottom: 9%; width: 75%; height: 25%; padding-top: 1%; padding-right: 5px; padding-bottom: 5px; padding-left: 5px; font-size: 25%; white-space: normal; visibility: hidden;" />
+        <engine:Label name="NameBox" text="AAAAAAA" class="frame" style="position: absolute; bottom: 32.75%; right: auto; width: 15%; -unity-text-align: upper-center; -unity-font-style: bold; visibility: hidden; font-size: 22px; left: 15%;" />
     </engine:VisualElement>
 </engine:UXML>
