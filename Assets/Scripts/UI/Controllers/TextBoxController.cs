@@ -9,6 +9,9 @@ public class TextBoxController : Controller<TextBoxView>
     [SerializeField]
     private GameEvent _sendTextToTextBoxEvent;
 
+    [SerializeField]
+    private GameEvent _TextBoxContinueInterpretingRequest;
+
     private const int TextBoxDelay = 10;
 
     private bool _isWriting = false;
@@ -56,8 +59,10 @@ public class TextBoxController : Controller<TextBoxView>
 
     private void OnClickTextBox(ClickEvent clickEvent) 
     {
-        Debug.Log($"TextBox clicked");
-        _isWriting = false;
+        if (_isWriting)
+            _isWriting = false;
+        else
+            _TextBoxContinueInterpretingRequest.Invoke(new NoArgGameEvent());
     }
 
 }

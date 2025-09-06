@@ -430,6 +430,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0378663e692ea0543854297d32eb570c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _entryScript: {fileID: 5022602860645237092, guid: d6bed9a8a1e144a4a9f57a96b27badd1, type: 3}
+  _autoStart: 1
+  _sendTextToTextBox: {fileID: 11400000, guid: 290ced3f64fc8324c94e4e3ebe2a6f47, type: 2}
+  _TextBoxContinueInterpretingRequest: {fileID: 11400000, guid: 26bbf8134a895434da4a7d4021c4fde8, type: 2}
 --- !u!1 &1897686626
 GameObject:
   m_ObjectHideFlags: 0
@@ -601,6 +605,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _sendTextToTextBoxEvent: {fileID: 11400000, guid: 290ced3f64fc8324c94e4e3ebe2a6f47, type: 2}
+  _TextBoxContinueInterpretingRequest: {fileID: 11400000, guid: 26bbf8134a895434da4a7d4021c4fde8, type: 2}
 --- !u!114 &1902181820
 MonoBehaviour:
   m_ObjectHideFlags: 0

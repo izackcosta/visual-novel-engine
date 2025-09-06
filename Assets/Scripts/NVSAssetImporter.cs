@@ -15,22 +15,13 @@ public class NVSAssetImporter : ScriptedImporter
         var asset = ScriptableObject.CreateInstance<VNSAsset>();
         asset.name = fileName;
         var lines = streamReader.ReadToEnd().Split('\n');
+        streamReader.Close();
         for (int i = 0; i < lines.Length; i++)
         {
             var trimmedLine = lines[i].Trim();
             lines[i] = trimmedLine;
         }
-        var instructions = new string[lines.Length][];
-        for (int i = 0; i < lines.Length; i++)
-        {
-            instructions[i] = lines[i].Split(' ').Where(word => word != "").ToArray();
-            foreach (var s in instructions[i])
-            {
-                Debug.Log(s);
-            }
-        }
-        asset.Instructions = instructions;
-        streamReader.Close();
+        asset.Instructions.AddRange(lines);
         ctx.AddObjectToAsset("main obj", asset);
         ctx.SetMainObject(asset);
         //AssetDatabase.SaveAssets();
