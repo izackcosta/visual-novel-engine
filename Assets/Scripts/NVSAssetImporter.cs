@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+
 using UnityEditor;
 using UnityEditor.AssetImporters;
 using System.IO;
@@ -28,3 +30,5 @@ public class NVSAssetImporter : ScriptedImporter
     }
 
 }
+
+#endif
