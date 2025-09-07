@@ -82,7 +82,8 @@ public class VNSInterpreter : MonoBehaviour
         if (currentInstruction[0] == SAY_COMMAND)
         {
             _waitingTextBox = true;
-            _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent(currentInstruction[1], "Maria"));
+            var name = currentInstruction.Length > 2 ? currentInstruction[2] : null;
+            _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent(currentInstruction[1], name));
             await UniTask.WaitWhile(() => _waitingTextBox);
         }
 

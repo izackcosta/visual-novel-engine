@@ -10,21 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
-  m_Name: Dialogue_en
+  m_Name: Dialogues_pt-BR
   m_EditorClassIdentifier: 
   m_LocaleId:
-    m_Code: en
+    m_Code: pt-BR
   m_SharedData: {fileID: 11400000, guid: 0183d7bf869c3854da4e4945a3cb90a0, type: 2}
   m_Metadata:
     m_Items: []
   m_TableData:
   - m_Id: 22194921472
-    m_Localized: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vel
-      dolor vel augue commodo gravida. Suspendisse sapien leo, luctus non tortor
-      at, accumsan mollis augue. Donec gravida odio in egestas porta. Ut blandit
-      ac neque a placerat. Nam a libero a dui accumsan sodales at ut magna. Vivamus
-      blandit dui dolor, ut venenatis dolor dictum sit amet. Orci varius natoque
-      penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+    m_Localized: pinto cu bosta mijo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17312168779776
+    m_Localized: "O livro est\xE1 na mesa"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17315675217920
+    m_Localized: "Onde est\xE1 a biblioteca"
     m_Metadata:
       m_Items: []
   references:

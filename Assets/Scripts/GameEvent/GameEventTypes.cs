@@ -38,11 +38,11 @@ public struct SendTextToTextBoxGameEvent : GameEventType
 
     public string textKey;
 
-    public string characterName;
+    public string characterNameKey;
 
-    public SendTextToTextBoxGameEvent(string textKey, string characterName)
+    public SendTextToTextBoxGameEvent(string textKey, string characterNameKey)
     {
         this.textKey = textKey;
-        this.characterName = characterName;
+        this.characterNameKey = characterNameKey;
     }
 }

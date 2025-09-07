@@ -16,7 +16,13 @@ MonoBehaviour:
   m_GUID: a7fc602431438634c95fda77f9cf9476
   m_SerializeEntries:
   - m_GUID: 7ba6d5933fd06e34999e14404330645e
-    m_Address: Dialogue_pt-BR
+    m_Address: Dialogues_pt-BR
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-pt-BR
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d3badd608b1158e4488f6ba43a12600e
+    m_Address: Names_pt-BR
     m_ReadOnly: 1
     m_SerializedLabels:
     - Locale-pt-BR

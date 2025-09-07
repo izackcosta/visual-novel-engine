@@ -19,7 +19,9 @@ public class TextBoxController : Controller<TextBoxView>
 
     private CancellationTokenSource _cancelationTokenSource = new CancellationTokenSource();
 
-    private const string DialogueLocalizationTableName = "Dialogue";
+    private const string DialogueLocalizationTableName = "Dialogues";
+
+    private const string NameLocalizationTableName = "Names";
 
     private void OnEnable()
     {
@@ -35,12 +37,18 @@ public class TextBoxController : Controller<TextBoxView>
 
     private void OnTextReceived(GameEventType @event) 
     {
+
         var textKey = ((SendTextToTextBoxGameEvent)@event).textKey;
-        var characterName = ((SendTextToTextBoxGameEvent)@event).characterName;
-        _view.SetCharacterName(characterName);
-        _view.Show();
         var fullText = LocalizationSettings.StringDatabase.GetLocalizedString(DialogueLocalizationTableName, textKey);
+        
+        var characterNameKey = ((SendTextToTextBoxGameEvent)@event).characterNameKey;
+        var characterName = characterNameKey != null ? LocalizationSettings.StringDatabase.GetLocalizedString(NameLocalizationTableName, characterNameKey) : string.Empty;
+        _view.SetCharacterName(characterName);
+
+        _view.Show();
+        
         WriteText(fullText).Forget();
+
     }
 
     private async UniTask WriteText(string fullText) 
