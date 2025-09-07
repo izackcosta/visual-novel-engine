@@ -434,6 +434,7 @@ MonoBehaviour:
   _autoStart: 1
   _sendTextToTextBox: {fileID: 11400000, guid: 290ced3f64fc8324c94e4e3ebe2a6f47, type: 2}
   _TextBoxContinueInterpretingRequest: {fileID: 11400000, guid: 26bbf8134a895434da4a7d4021c4fde8, type: 2}
+  _changeBackgroundEvent: {fileID: 11400000, guid: e465b88946c008b4bb66324b559f28f7, type: 2}
 --- !u!1 &1897686626
 GameObject:
   m_ObjectHideFlags: 0

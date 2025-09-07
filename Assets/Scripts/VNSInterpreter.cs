@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.AddressableAssets;
 
 public class VNSInterpreter : MonoBehaviour
 {
@@ -12,24 +13,30 @@ public class VNSInterpreter : MonoBehaviour
     [SerializeField]
     private bool _autoStart = true;
 
-    [Header("Game Events")]
-    [SerializeField]
-    private GameEvent _sendTextToTextBox;
-    [SerializeField]
-    private GameEvent _TextBoxContinueInterpretingRequest;
-
     private List<string[]> _script;
 
     private int _programCounter = 0;
 
     private bool _waitingTextBox = false;
 
+    [Header("Game Events")]
+    [SerializeField]
+    private GameEvent _sendTextToTextBox;
+    [SerializeField]
+    private GameEvent _TextBoxContinueInterpretingRequest;
+    [SerializeField]
+    private GameEvent _changeBackgroundEvent;
+
+    //COMMANDS
     private const string WAIT_COMMAND = "wait";
-
     private const string SAY_COMMAND = "say";
+    private const string BACKGROUND_COMMAND = "background";
 
+    //PATHS
+    private const string BACKGROUNDS_PATH_FORMAT = "Assets/Images/Backgrounds/{0}.png";
+
+    //ERRORS
     private const string ERROR_FORMAT = "Error at line {0}: {1}";
-
     private const string INVALID_ARGUMENT_ERROR = "Invalid argument";
 
     private void OnEnable()
@@ -85,6 +92,13 @@ public class VNSInterpreter : MonoBehaviour
             var name = currentInstruction.Length > 2 ? currentInstruction[2] : null;
             _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent(currentInstruction[1], name));
             await UniTask.WaitWhile(() => _waitingTextBox);
+        }
+
+        //BACKGROUNG
+        if (currentInstruction[0] == BACKGROUND_COMMAND)
+        {
+            var backgroundSprite = await Addressables.LoadAssetAsync<Sprite>(string.Format(BACKGROUNDS_PATH_FORMAT, currentInstruction[1]));
+            _changeBackgroundEvent.Invoke(new SpriteGameEvent(backgroundSprite));
         }
 
         _programCounter++;
