@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UIElements;
 
 public class TextBoxController : Controller<TextBoxView>
@@ -18,6 +19,8 @@ public class TextBoxController : Controller<TextBoxView>
 
     private CancellationTokenSource _cancelationTokenSource = new CancellationTokenSource();
 
+    private const string DialogueLocalizationTableName = "Dialogue";
+
     private void OnEnable()
     {
         _sendTextToTextBoxEvent.Listeners += OnTextReceived;
@@ -32,29 +35,28 @@ public class TextBoxController : Controller<TextBoxView>
 
     private void OnTextReceived(GameEventType @event) 
     {
-        var text = ((SendTextToTextBoxGameEvent)@event).text;
+        var textKey = ((SendTextToTextBoxGameEvent)@event).textKey;
         var characterName = ((SendTextToTextBoxGameEvent)@event).characterName;
         _view.SetCharacterName(characterName);
         _view.Show();
-        WriteText(text).Forget();
+        var fullText = LocalizationSettings.StringDatabase.GetLocalizedString(DialogueLocalizationTableName, textKey);
+        WriteText(fullText).Forget();
     }
 
     private async UniTask WriteText(string fullText) 
     {
-        var text = string.Empty;
         var letterIndex = 0;
         _isWriting = true;
-        while (text.Length < fullText.Length  && _isWriting)
+        _view.SetText(fullText);
+        while (letterIndex < fullText.Length  && _isWriting)
         {
-            text += fullText[letterIndex];
-            _view.SetText(text);
+            _view.IncrementVisibleCharacters();
             letterIndex++;
             await UniTask.Delay(TextBoxDelay);
             await UniTask.Yield();
         }
-        _view.SetText(fullText);
+        _view.RevealEntireText();
         _isWriting = false;
-        //Debug.Log(_view.GetText());
     }
 
     private void OnClickTextBox(ClickEvent clickEvent) 

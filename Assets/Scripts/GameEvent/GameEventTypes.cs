@@ -36,13 +36,13 @@ public struct SpriteGameEvent : SingleArgumentGameEventType<Sprite>
 public struct SendTextToTextBoxGameEvent : GameEventType
 {
 
-    public string text;
+    public string textKey;
 
     public string characterName;
 
-    public SendTextToTextBoxGameEvent(string text, string characterName)
+    public SendTextToTextBoxGameEvent(string textKey, string characterName)
     {
-        this.text = text;
+        this.textKey = textKey;
         this.characterName = characterName;
     }
 }

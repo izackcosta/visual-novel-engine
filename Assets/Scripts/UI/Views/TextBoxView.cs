@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Localization.Settings;
+using System.Linq;
 
 public class TextBoxView : View, IClickable
 {
@@ -12,6 +14,12 @@ public class TextBoxView : View, IClickable
 
     private const string NameBoxName = "NameBox";
 
+    private string _fullText;
+
+    private int _visibleCharacters = 0;
+
+    private const string InvisibleCharacterFormat = "<color=#00000000>{0}</color>";
+
     protected override void Awake()
     {
         base.Awake();
@@ -19,9 +27,12 @@ public class TextBoxView : View, IClickable
         _nameBox = _root.Q<Label>(NameBoxName);
     }
 
-    public void SetText(string text) => _textArea.text = text;
-
-    public string GetText() => _textArea.text;
+    public void SetText(string fullText) 
+    {
+        _fullText = fullText;
+        _visibleCharacters = 0;
+        _textArea.text = GenerateText();
+    }
 
     public void SetCharacterName(string characterName) => _nameBox.text = characterName;
 
@@ -31,6 +42,28 @@ public class TextBoxView : View, IClickable
     {
         _textArea.visible = true;
         _nameBox.visible = _nameBox.text != string.Empty;
+    }
+
+    public void IncrementVisibleCharacters(int amount = 1) 
+    {
+        _visibleCharacters = Mathf.Min(_visibleCharacters + amount, _fullText.Length);
+        _textArea.text = GenerateText();
+    }
+
+    public void RevealEntireText() 
+    {
+        _visibleCharacters = _fullText.Length;
+        _textArea.text = GenerateText();
+    }
+
+    private string GenerateText()
+    {
+        var finalText = string.Empty;
+        for(int i = 0; i < _fullText.Length; i++)
+        {
+            finalText += i < _visibleCharacters ? _fullText[i] : string.Format(InvisibleCharacterFormat, _fullText[i]);
+        }
+        return finalText;
     }
 
     public override void Hide()
@@ -50,6 +83,6 @@ public class TextBoxView : View, IClickable
     public void UnregisterClickEvent(EventCallback<ClickEvent> clickEvent) 
     {
         _root.UnregisterCallback<ClickEvent>(clickEvent);
-    } 
+    }
 
 }
