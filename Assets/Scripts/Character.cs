@@ -12,4 +12,6 @@ public class Character : MonoBehaviour
 
     public void SetSprite(Sprite sprite) => _spriteRenderer.sprite = sprite;
 
+    public void InvertSprite() => _spriteRenderer.flipX = !_spriteRenderer.flipX;
+
 }

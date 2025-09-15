@@ -1,5 +1,9 @@
 wait 2000
-say test test
-say test-2 test
+create-character john John_Happy 2
+create-character lisa Lisa_Happy 0 0 0 1
+wait 1000
+say test lisa
+say test-2 john
+say test-3 john
 background Train_Tunnel
-say test-3
+say test-4

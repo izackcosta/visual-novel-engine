@@ -19,15 +19,19 @@ MonoBehaviour:
     m_Items: []
   m_TableData:
   - m_Id: 22194921472
-    m_Localized: Hello, World!
+    m_Localized: Good morning, John!
     m_Metadata:
       m_Items: []
   - m_Id: 17312168779776
-    m_Localized: The book is on the table
+    m_Localized: Morning!
     m_Metadata:
       m_Items: []
   - m_Id: 17315675217920
-    m_Localized: Where is the library?
+    m_Localized: Lets take the metro.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3165356208922624
+    m_Localized: Later in the metro...
     m_Metadata:
       m_Items: []
   references:

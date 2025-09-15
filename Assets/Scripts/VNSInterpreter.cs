@@ -26,18 +26,23 @@ public class VNSInterpreter : MonoBehaviour
     private GameEvent _TextBoxContinueInterpretingRequest;
     [SerializeField]
     private GameEvent _changeBackgroundEvent;
+    [SerializeField]
+    private GameEvent _createCharacterEvent;
 
     //COMMANDS
     private const string WAIT_COMMAND = "wait";
     private const string SAY_COMMAND = "say";
     private const string BACKGROUND_COMMAND = "background";
+    private const string CREATE_CHARACTER_COMMAND = "create-character";
 
     //PATHS
     private const string BACKGROUNDS_PATH_FORMAT = "Assets/Images/Backgrounds/{0}.png";
+    private const string CHARACTERS_PATH_FORMAT = "Assets/Images/Characters/{0}.png";
 
     //ERRORS
     private const string ERROR_FORMAT = "Error at line {0}: {1}";
     private const string INVALID_ARGUMENT_ERROR = "Invalid argument";
+    private const string INVALID_ARGUMENT_NUMBER_ERROR = "Invalid number of arguments";
 
     private void OnEnable()
     {
@@ -76,6 +81,11 @@ public class VNSInterpreter : MonoBehaviour
         //WAIT
         if (currentInstruction[0] == WAIT_COMMAND)
         {
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                return;
+            }
             if (!int.TryParse(currentInstruction[1], out int waitTime))
             {
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_ERROR));
@@ -88,6 +98,11 @@ public class VNSInterpreter : MonoBehaviour
         //SAY
         if (currentInstruction[0] == SAY_COMMAND)
         {
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                return;
+            }
             _waitingTextBox = true;
             var name = currentInstruction.Length > 2 ? currentInstruction[2] : null;
             _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent(currentInstruction[1], name));
@@ -97,8 +112,39 @@ public class VNSInterpreter : MonoBehaviour
         //BACKGROUNG
         if (currentInstruction[0] == BACKGROUND_COMMAND)
         {
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                return;
+            }
             var backgroundSprite = await Addressables.LoadAssetAsync<Sprite>(string.Format(BACKGROUNDS_PATH_FORMAT, currentInstruction[1]));
             _changeBackgroundEvent.Invoke(new SpriteGameEvent(backgroundSprite));
+        }
+
+        //CREATE CHARACTER
+        if (currentInstruction[0] == CREATE_CHARACTER_COMMAND) 
+        {
+
+            if(currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                return;
+            }
+
+            var name = currentInstruction[1];
+
+            var sprite = currentInstruction.Length > 2 ? await Addressables.LoadAssetAsync<Sprite>(string.Format(CHARACTERS_PATH_FORMAT, currentInstruction[2])) : null;
+
+            var position = currentInstruction.Length > 3 && int.TryParse(currentInstruction[3], out int pos) ? (CharacterPosition)pos : CharacterPosition.Middle;
+
+            var offsetX = currentInstruction.Length > 4 && float.TryParse(currentInstruction[4], out float x) ? x : 0;
+
+            var offsetY = currentInstruction.Length > 5 && float.TryParse(currentInstruction[5], out float y) ? y : 0;
+
+            var inverted = currentInstruction.Length > 6 && int.TryParse(currentInstruction[6], out int inv) ? inv > 0 : false;
+
+            _createCharacterEvent.Invoke(new CreateCharacterGameEvent(name, sprite, position, offsetX, offsetY, inverted));
+
         }
 
         _programCounter++;

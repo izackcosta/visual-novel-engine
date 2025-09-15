@@ -19,7 +19,11 @@ MonoBehaviour:
     m_Items: []
   m_TableData:
   - m_Id: 9138695020544
-    m_Localized: Johny
+    m_Localized: John
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3149752634679296
+    m_Localized: Lisa
     m_Metadata:
       m_Items: []
   references:

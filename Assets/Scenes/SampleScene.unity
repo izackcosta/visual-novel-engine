@@ -498,6 +498,7 @@ MonoBehaviour:
   _sendTextToTextBox: {fileID: 11400000, guid: 290ced3f64fc8324c94e4e3ebe2a6f47, type: 2}
   _TextBoxContinueInterpretingRequest: {fileID: 11400000, guid: 26bbf8134a895434da4a7d4021c4fde8, type: 2}
   _changeBackgroundEvent: {fileID: 11400000, guid: e465b88946c008b4bb66324b559f28f7, type: 2}
+  _createCharacterEvent: {fileID: 11400000, guid: a89035d312a768f4aa7969c718c87dba, type: 2}
 --- !u!1 &1628906862
 GameObject:
   m_ObjectHideFlags: 0
@@ -848,6 +849,7 @@ MonoBehaviour:
   - {fileID: 1426358995}
   - {fileID: 1628906863}
   - {fileID: 1392097062}
+  _createCharacterEvent: {fileID: 11400000, guid: a89035d312a768f4aa7969c718c87dba, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

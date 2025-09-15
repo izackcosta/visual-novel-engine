@@ -45,4 +45,27 @@ public struct SendTextToTextBoxGameEvent : GameEventType
         this.textKey = textKey;
         this.characterNameKey = characterNameKey;
     }
+
+}
+
+public struct CreateCharacterGameEvent : GameEventType
+{
+
+    public string key;
+    public Sprite initialSprite;
+    public CharacterPosition position;
+    public float offsetX;
+    public float offsetY;
+    public bool inverted;
+
+    public CreateCharacterGameEvent(string key, Sprite initialSprite, CharacterPosition position, float offsetX, float offsetY, bool inverted)
+    {
+        this.key = key;
+        this.initialSprite = initialSprite;
+        this.position = position;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.inverted = inverted;
+    }
+
 }

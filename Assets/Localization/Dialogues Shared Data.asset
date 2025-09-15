@@ -27,6 +27,10 @@ MonoBehaviour:
     m_Key: test-3
     m_Metadata:
       m_Items: []
+  - m_Id: 3165356208922624
+    m_Key: test-4
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

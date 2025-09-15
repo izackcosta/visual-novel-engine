@@ -19,15 +19,19 @@ MonoBehaviour:
     m_Items: []
   m_TableData:
   - m_Id: 22194921472
-    m_Localized: "Ol\xE1, Mundo!"
+    m_Localized: "Bom dia, Jo\xE3o!"
     m_Metadata:
       m_Items: []
   - m_Id: 17312168779776
-    m_Localized: "O livro est\xE1 na mesa"
+    m_Localized: Bom dia!
     m_Metadata:
       m_Items: []
   - m_Id: 17315675217920
-    m_Localized: "Onde est\xE1 a biblioteca"
+    m_Localized: Vamos pegar o metro.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3165356208922624
+    m_Localized: Mais tarde no metro...
     m_Metadata:
       m_Items: []
   references:

@@ -22,6 +22,10 @@ MonoBehaviour:
     m_Localized: "Jo\xE3o"
     m_Metadata:
       m_Items: []
+  - m_Id: 3149752634679296
+    m_Localized: Eliza
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
