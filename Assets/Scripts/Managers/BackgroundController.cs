@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BackgroundManager : MonoBehaviour
+public class BackgroundController : MonoBehaviour
 {
 
     private SpriteRenderer _spriteRenderer;
