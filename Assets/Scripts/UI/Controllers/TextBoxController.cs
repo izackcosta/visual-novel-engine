@@ -13,6 +13,9 @@ public class TextBoxController : Controller<TextBoxView>
     [SerializeField]
     private GameEvent _TextBoxContinueInterpretingRequest;
 
+    [SerializeField]
+    private GameEvent _hideTextBoxRequestEvent;
+
     private const int TextBoxDelay = 10;
 
     private bool _isWriting = false;
@@ -27,12 +30,14 @@ public class TextBoxController : Controller<TextBoxView>
     {
         _sendTextToTextBoxEvent.Listeners += OnTextReceived;
         (_view as IClickable).RegisterClickEvent(OnClickTextBox);
+        _hideTextBoxRequestEvent.Listeners += OnHideTextBoxRequested;
     }
 
     private void OnDisable()
     {
         _sendTextToTextBoxEvent.Listeners -= OnTextReceived;
         (_view as IClickable).UnregisterClickEvent(OnClickTextBox);
+        _hideTextBoxRequestEvent.Listeners -= OnHideTextBoxRequested;
     }
 
     private void OnTextReceived(GameEventType @event) 
@@ -73,6 +78,11 @@ public class TextBoxController : Controller<TextBoxView>
             _isWriting = false;
         else
             _TextBoxContinueInterpretingRequest.Invoke(new NoArgGameEvent());
+    }
+
+    private void OnHideTextBoxRequested(GameEventType @event)
+    {
+        _view.Hide();
     }
 
 }

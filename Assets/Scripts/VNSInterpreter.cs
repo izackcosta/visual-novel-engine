@@ -37,6 +37,8 @@ public class VNSInterpreter : MonoBehaviour
     private GameEvent _startFadeInEvent;
     [SerializeField]
     private GameEvent _fadeCompletedEvent;
+    [SerializeField]
+    private GameEvent _hideTextBoxRequestEvent;
 
     //COMMANDS
     private const string WAIT_COMMAND = "wait";
@@ -45,6 +47,7 @@ public class VNSInterpreter : MonoBehaviour
     private const string CREATE_CHARACTER_COMMAND = "create-character";
     private const string FADE_OUT_SCREEN_COMMAND = "fade-out";
     private const string FADE_IN_SCREEN_COMMAND = "fade-in";
+    private const string HIDE_TEXTBOX_COMMAND = "hide-text";
 
     //DEFAULTS
     private const CharacterPosition CHARACTER_DEFAULT_POSITION = CharacterPosition.Middle;
@@ -184,6 +187,12 @@ public class VNSInterpreter : MonoBehaviour
 
             await UniTask.WaitWhile(() => _waitingFade);
 
+        }
+
+        //HIDE TEXTBOX
+        if (currentInstruction[0] == HIDE_TEXTBOX_COMMAND)
+        {
+            _hideTextBoxRequestEvent.Invoke(new NoArgGameEvent());
         }
 
         _programCounter++;
