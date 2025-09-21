@@ -7,7 +7,7 @@ using UnityEngine;
 using System.Linq;
 
 [ScriptedImporter(1, "vns", AllowCaching =true)]
-public class NVSAssetImporter : ScriptedImporter
+public class VNSAssetImporter : ScriptedImporter
 {
 
     public override void OnImportAsset(AssetImportContext ctx)
