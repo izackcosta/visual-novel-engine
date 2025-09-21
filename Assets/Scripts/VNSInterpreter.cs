@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.AddressableAssets;
+using PrimeTween;
 
 public class VNSInterpreter : MonoBehaviour
 {
@@ -19,6 +20,8 @@ public class VNSInterpreter : MonoBehaviour
 
     private bool _waitingTextBox = false;
 
+    private bool _waitingFade = false;
+
     [Header("Game Events")]
     [SerializeField]
     private GameEvent _sendTextToTextBox;
@@ -28,12 +31,26 @@ public class VNSInterpreter : MonoBehaviour
     private GameEvent _changeBackgroundEvent;
     [SerializeField]
     private GameEvent _createCharacterEvent;
+    [SerializeField]
+    private GameEvent _startFadeOutEvent;
+    [SerializeField]
+    private GameEvent _startFadeInEvent;
+    [SerializeField]
+    private GameEvent _fadeCompletedEvent;
 
     //COMMANDS
     private const string WAIT_COMMAND = "wait";
     private const string SAY_COMMAND = "say";
     private const string BACKGROUND_COMMAND = "background";
     private const string CREATE_CHARACTER_COMMAND = "create-character";
+    private const string FADE_OUT_SCREEN_COMMAND = "fade-out";
+    private const string FADE_IN_SCREEN_COMMAND = "fade-in";
+
+    //DEFAULTS
+    private const CharacterPosition CHARACTER_DEFAULT_POSITION = CharacterPosition.Middle;
+    private const float FADE_DEFAULT_DURATION = 1f;
+    private const TransitionMode FADE_DEFAULT_TRANSITION = TransitionMode.Normal;
+    private const Ease FADE_DEFAULT_EASE = Ease.Linear;
 
     //PATHS
     private const string BACKGROUNDS_PATH_FORMAT = "Assets/Images/Backgrounds/{0}.png";
@@ -46,12 +63,14 @@ public class VNSInterpreter : MonoBehaviour
 
     private void OnEnable()
     {
-        _TextBoxContinueInterpretingRequest.Listeners +=OnTextBoxContinueInterpretingRequest;
+        _TextBoxContinueInterpretingRequest.Listeners += OnTextBoxContinueInterpretingRequest;
+        _fadeCompletedEvent.Listeners += OnFadeCompleted;
     }
 
     private void OnDisable()
     {
         _TextBoxContinueInterpretingRequest.Listeners -= OnTextBoxContinueInterpretingRequest;
+        _fadeCompletedEvent.Listeners -= OnFadeCompleted;
     }
 
     private void Start()
@@ -135,7 +154,7 @@ public class VNSInterpreter : MonoBehaviour
 
             var sprite = currentInstruction.Length > 2 ? await Addressables.LoadAssetAsync<Sprite>(string.Format(CHARACTERS_PATH_FORMAT, currentInstruction[2])) : null;
 
-            var position = currentInstruction.Length > 3 && int.TryParse(currentInstruction[3], out int pos) ? (CharacterPosition)pos : CharacterPosition.Middle;
+            var position = currentInstruction.Length > 3 && int.TryParse(currentInstruction[3], out int pos) ? (CharacterPosition)pos : CHARACTER_DEFAULT_POSITION;
 
             var offsetX = currentInstruction.Length > 4 && float.TryParse(currentInstruction[4], out float x) ? x : 0;
 
@@ -144,6 +163,26 @@ public class VNSInterpreter : MonoBehaviour
             var inverted = currentInstruction.Length > 6 && int.TryParse(currentInstruction[6], out int inv) ? inv > 0 : false;
 
             _createCharacterEvent.Invoke(new CreateCharacterGameEvent(name, sprite, position, offsetX, offsetY, inverted));
+
+        }
+
+        //FADE IN / FADE OUT SCREEN
+        if (currentInstruction[0] == FADE_IN_SCREEN_COMMAND || currentInstruction[0] == FADE_OUT_SCREEN_COMMAND)
+        {
+
+            var duration = currentInstruction.Length > 1 && float.TryParse(currentInstruction[1], out float dur) ? dur : FADE_DEFAULT_DURATION;
+
+            var transitionMode = currentInstruction.Length > 2 && int.TryParse(currentInstruction[2], out int mode) ? (TransitionMode)mode : FADE_DEFAULT_TRANSITION;
+
+            var ease = currentInstruction.Length > 3 && int.TryParse(currentInstruction[3], out int easeInt) ? (Ease)easeInt : FADE_DEFAULT_EASE;
+
+            _waitingFade = true;
+
+            var fadeEvent = currentInstruction[0] == FADE_IN_SCREEN_COMMAND ? _startFadeInEvent : _startFadeOutEvent;
+
+            fadeEvent.Invoke(new FadeGameEvent(duration, transitionMode, ease));
+
+            await UniTask.WaitWhile(() => _waitingFade);
 
         }
 
@@ -162,6 +201,12 @@ public class VNSInterpreter : MonoBehaviour
     {
         if(_waitingTextBox)
             _waitingTextBox = false;
+    }
+
+    private void OnFadeCompleted(GameEventType eventType) 
+    {
+        if(_waitingFade)
+            _waitingFade = false;
     }
 
 }

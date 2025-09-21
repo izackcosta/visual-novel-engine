@@ -1,3 +1,4 @@
+using PrimeTween;
 using UnityEngine;
 
 public interface GameEventType{}
@@ -66,6 +67,24 @@ public struct CreateCharacterGameEvent : GameEventType
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.inverted = inverted;
+    }
+
+}
+
+public struct  FadeGameEvent : GameEventType
+{
+    
+    public float duration;
+
+    public TransitionMode mode;
+
+    public Ease ease;
+
+    public FadeGameEvent(float duration, TransitionMode mode, Ease ease)
+    {
+        this.duration = duration;
+        this.mode = mode;
+        this.ease = ease;
     }
 
 }

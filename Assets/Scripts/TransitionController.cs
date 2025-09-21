@@ -28,6 +28,13 @@ public class TransitionController : MonoBehaviour
         { TransitionMode.Shutters, "_TRANSITIONMODE_SHUTTERS" }
     };
 
+    [SerializeField]
+    private GameEvent _startFadeOutEvent;
+    [SerializeField]
+    private GameEvent _startFadeInEvent;
+    [SerializeField]
+    private GameEvent _fadeCompletedEvent;
+
     private void Awake()
     {
         InitializeTransitionTexture();
@@ -35,11 +42,22 @@ public class TransitionController : MonoBehaviour
         _transitionMaterial = _spriteRenderer.material;
     }
 
+    private void OnEnable()
+    {
+        _startFadeOutEvent.Listeners += OnStartFadeOutRequest;
+        _startFadeInEvent.Listeners += OnStartFadeInRequest;
+    }
+
+    private void OnDisable()
+    {
+        _startFadeOutEvent.Listeners -= OnStartFadeOutRequest;
+        _startFadeInEvent.Listeners -= OnStartFadeInRequest;
+    }
+
     private void Start()
     {
         _spriteRenderer.sprite = Sprite.Create(_transitionTexture, new Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), new Vector2(0.5f, 0.5f));
         _transitionMaterial.SetTexture("_MainTex", _transitionTexture);
-        StartFadeOut(2, TransitionMode.Shutters, Ease.OutQuad);
     }
 
     private void InitializeTransitionTexture() 
@@ -59,11 +77,25 @@ public class TransitionController : MonoBehaviour
         return pixels;
     }
 
+    private void OnStartFadeInRequest(GameEventType @event)
+    {
+        var e = (FadeGameEvent)@event;
+        StartFadeIn(e.duration, e.mode, e.ease);
+    }
+
     public void StartFadeIn(float duration, TransitionMode mode, Ease ease) => FadeIn(duration, mode, ease).Forget();
 
     private async UniTask FadeIn(float duration, TransitionMode mode, Ease ease)
     {
+        SetTransitionMode(mode);
         await Tween.Custom(1, 0, duration, value => _transitionMaterial.SetFloat(FADE_AMOUNT_PROPERTY_NAME, value), ease);
+        _fadeCompletedEvent.Invoke(new NoArgGameEvent());
+    }
+
+    private void OnStartFadeOutRequest(GameEventType @event)
+    {
+        var e = (FadeGameEvent)@event;
+        StartFadeOut(e.duration, e.mode, e.ease);
     }
 
     public void StartFadeOut(float duration, TransitionMode mode, Ease ease) => FadeOut(duration, mode, ease).Forget();
@@ -72,21 +104,16 @@ public class TransitionController : MonoBehaviour
     {
         SetTransitionMode(mode);
         await Tween.Custom(0, 1, duration, value => _transitionMaterial.SetFloat(FADE_AMOUNT_PROPERTY_NAME, value), ease);
+        _fadeCompletedEvent.Invoke(new NoArgGameEvent());
     }
 
     private void SetTransitionMode(TransitionMode mode)
     {
         foreach (var kvp in _transitionModes)
-        {
             if (kvp.Key == mode)
-            {
                 _transitionMaterial.EnableKeyword(kvp.Value);
-            }
             else
-            {
                 _transitionMaterial.DisableKeyword(kvp.Value);
-            }
-        }
     }
 
 }
