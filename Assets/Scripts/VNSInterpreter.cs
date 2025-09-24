@@ -22,6 +22,8 @@ public class VNSInterpreter : MonoBehaviour
 
     private bool _waitingFade = false;
 
+    private Dictionary<string, Sprite> _spriteAssets = new Dictionary<string, Sprite>();
+
     [Header("Game Events")]
     [SerializeField]
     private GameEvent _sendTextToTextBox;
@@ -88,7 +90,9 @@ public class VNSInterpreter : MonoBehaviour
         _script = CreateScript(script);
         _programCounter = 0;
 
-        while(_programCounter < _script.Count) 
+        await PreLoad(_script);
+
+        while (_programCounter < _script.Count) 
         {
             await ReadNextInstruction(_script);
         }
@@ -139,7 +143,7 @@ public class VNSInterpreter : MonoBehaviour
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
                 return;
             }
-            var backgroundSprite = await Addressables.LoadAssetAsync<Sprite>(string.Format(BACKGROUNDS_PATH_FORMAT, currentInstruction[1]));
+            var backgroundSprite = _spriteAssets[string.Format(BACKGROUNDS_PATH_FORMAT, currentInstruction[1])];
             _changeBackgroundEvent.Invoke(new SpriteGameEvent(backgroundSprite));
         }
 
@@ -155,7 +159,7 @@ public class VNSInterpreter : MonoBehaviour
 
             var name = currentInstruction[1];
 
-            var sprite = currentInstruction.Length > 2 ? await Addressables.LoadAssetAsync<Sprite>(string.Format(CHARACTERS_PATH_FORMAT, currentInstruction[2])) : null;
+            var sprite = currentInstruction.Length > 2 ? _spriteAssets[string.Format(CHARACTERS_PATH_FORMAT, currentInstruction[2])] : null;
 
             var position = currentInstruction.Length > 3 && int.TryParse(currentInstruction[3], out int pos) ? (CharacterPosition)pos : CHARACTER_DEFAULT_POSITION;
 
@@ -216,6 +220,40 @@ public class VNSInterpreter : MonoBehaviour
     {
         if(_waitingFade)
             _waitingFade = false;
+    }
+
+    private async UniTask PreLoad(List<string[]> script) 
+    {
+
+        foreach (string[] line in script) 
+        {
+
+            if (line[0] == CREATE_CHARACTER_COMMAND)
+            {
+
+                if (line.Length > 2)
+                {
+                    var path = string.Format(CHARACTERS_PATH_FORMAT, line[2]);
+                    var sprite = await Addressables.LoadAssetAsync<Sprite>(path);
+                    _spriteAssets.Add(path, sprite);
+                }
+
+            }
+
+            if (line[0] == BACKGROUND_COMMAND)
+            {
+
+                if (line.Length > 1)
+                {
+                    var path = string.Format(BACKGROUNDS_PATH_FORMAT, line[1]);
+                    var sprite = await Addressables.LoadAssetAsync<Sprite>(path);
+                    _spriteAssets.Add(path, sprite);
+                }
+
+            }
+
+        }
+
     }
 
 }
