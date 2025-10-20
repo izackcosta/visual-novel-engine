@@ -1,5 +1,4 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <engine:VisualElement name="Root" style="flex-grow: 1;">
-        <engine:Button text="Button" />
-    </engine:VisualElement>
+    <Style src="project://database/Assets/UI/style.uss?fileID=7433441132597879392&amp;guid=b8730ada8383c494683a0a0f4464e693&amp;type=3#style" />
+    <engine:VisualElement name="ChoicesArea" style="flex-grow: 1; width: 1000px; align-self: center; align-content: center; justify-content: center; height: 500px; position: absolute; top: 100px; background-color: rgba(0, 0, 0, 0); -unity-background-scale-mode: stretch-to-fill; align-items: center; visibility: hidden;" />
 </engine:UXML>

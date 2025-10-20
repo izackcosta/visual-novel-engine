@@ -117,7 +117,6 @@ public class VNSInterpreter : MonoBehaviour
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_ERROR));
                 return;
             }
-            Debug.Log($"waiting {waitTime / 1000} seconds");
             await UniTask.Delay(waitTime);
         }
 
