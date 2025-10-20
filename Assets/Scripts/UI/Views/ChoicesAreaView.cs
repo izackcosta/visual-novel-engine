@@ -31,14 +31,6 @@ public class ChoicesAreaView : View
     {
         base.Awake();
         _choicesArea = _root.Q<VisualElement>(ChoicesAreaName);
-        Show();
-        SetChoices(new ChoiceData[] 
-        {
-            new ChoiceData("Choice 1", "choice_1"),
-            new ChoiceData("Choice 2", "choice_2"),
-            new ChoiceData("Choice 3", "choice_3"),
-            new ChoiceData("Choice 4", "choice_4"),
-        });
     }
 
     public override void Hide()

@@ -1,11 +1,10 @@
-wait 1000
-create-character john John_Happy 2
-create-character lisa Lisa_Happy 0 0 0 1
-say test lisa
-say test-2 john
-say test-3 john
-hide-text
-fade-out 1 0
-background Train_Tunnel
-fade-in 1 1
+say test
+
+goto :test
+
+say test-2
+
+say test-3
+
+:test
 say test-4

@@ -24,6 +24,8 @@ public class VNSInterpreter : MonoBehaviour
 
     private Dictionary<string, Sprite> _spriteAssets = new Dictionary<string, Sprite>();
 
+    private Dictionary<string, int> _labels = new Dictionary<string, int>();
+
     [Header("Game Events")]
     [SerializeField]
     private GameEvent _sendTextToTextBox;
@@ -50,6 +52,7 @@ public class VNSInterpreter : MonoBehaviour
     private const string FADE_OUT_SCREEN_COMMAND = "fade-out";
     private const string FADE_IN_SCREEN_COMMAND = "fade-in";
     private const string HIDE_TEXTBOX_COMMAND = "hide-text";
+    private const string GOTO_COMMAND = "goto";
 
     //DEFAULTS
     private const CharacterPosition CHARACTER_DEFAULT_POSITION = CharacterPosition.Middle;
@@ -103,6 +106,14 @@ public class VNSInterpreter : MonoBehaviour
     {
 
         var currentInstruction = script[_programCounter];
+
+        var incrementProgramCounter = true;
+
+        if(currentInstruction.Length < 1) 
+        {
+            _programCounter++;
+            return;
+        }
 
         //WAIT
         if (currentInstruction[0] == WAIT_COMMAND)
@@ -198,7 +209,31 @@ public class VNSInterpreter : MonoBehaviour
             _hideTextBoxRequestEvent.Invoke(new NoArgGameEvent());
         }
 
-        _programCounter++;
+        //GOTO
+        if (currentInstruction[0] == GOTO_COMMAND)
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                return;
+            }
+
+            var label = currentInstruction[1];
+
+            if (!_labels.ContainsKey(label))
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_ERROR));
+                return;
+            }
+
+            _programCounter = _labels[label];
+            incrementProgramCounter = false;
+
+        }
+
+        if (incrementProgramCounter)
+            _programCounter++;
 
     }
 
@@ -227,6 +262,10 @@ public class VNSInterpreter : MonoBehaviour
         foreach (string[] line in script) 
         {
 
+            if (line.Length < 1)
+                continue;
+
+            //GET CHARACTER SPRITES
             if (line[0] == CREATE_CHARACTER_COMMAND)
             {
 
@@ -239,6 +278,7 @@ public class VNSInterpreter : MonoBehaviour
 
             }
 
+            //GET BACKGROUND SPRITES
             if (line[0] == BACKGROUND_COMMAND)
             {
 
@@ -250,6 +290,10 @@ public class VNSInterpreter : MonoBehaviour
                 }
 
             }
+
+            //GET LABELS
+            if (line[0].Length > 1 && line[0].StartsWith(':'))
+                _labels.Add(line[0], script.IndexOf(line));
 
         }
 

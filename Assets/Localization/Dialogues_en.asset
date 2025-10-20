@@ -19,15 +19,15 @@ MonoBehaviour:
     m_Items: []
   m_TableData:
   - m_Id: 22194921472
-    m_Localized: Good morning, John!
+    m_Localized: test
     m_Metadata:
       m_Items: []
   - m_Id: 17312168779776
-    m_Localized: Morning!
+    m_Localized: test 2
     m_Metadata:
       m_Items: []
   - m_Id: 17315675217920
-    m_Localized: Lets take the metro.
+    m_Localized: test 3
     m_Metadata:
       m_Items: []
   - m_Id: 3165356208922624
