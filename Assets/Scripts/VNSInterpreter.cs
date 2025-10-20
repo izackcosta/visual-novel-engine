@@ -107,8 +107,6 @@ public class VNSInterpreter : MonoBehaviour
 
         var currentInstruction = script[_programCounter];
 
-        var incrementProgramCounter = true;
-
         if(currentInstruction.Length < 1) 
         {
             _programCounter++;
@@ -228,12 +226,10 @@ public class VNSInterpreter : MonoBehaviour
             }
 
             _programCounter = _labels[label];
-            incrementProgramCounter = false;
 
         }
-
-        if (incrementProgramCounter)
-            _programCounter++;
+        
+        _programCounter++;
 
     }
 
