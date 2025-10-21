@@ -66,7 +66,6 @@ public class TextBoxController : Controller<TextBoxView>
             _view.IncrementVisibleCharacters();
             letterIndex++;
             await UniTask.Delay(TextBoxDelay);
-            await UniTask.Yield();
         }
         _view.RevealEntireText();
         _isWriting = false;

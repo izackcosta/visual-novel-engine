@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UIElements;
 
 public struct ChoiceData
@@ -27,6 +29,8 @@ public class ChoicesAreaView : View
 
     private const string ChoicesAreaName = "ChoicesArea";
 
+    private const string ChoicesLocalizationTableName = "Choices";
+
     protected override void Awake()
     {
         base.Awake();
@@ -43,7 +47,7 @@ public class ChoicesAreaView : View
         _choicesArea.visible = true;
     }
 
-    public void SetChoices(ChoiceData[] choices)
+    public void SetChoices(ChoiceData[] choices, Action<string> onMakeChoice)
     {
 
         foreach (ChoiceData choice in choices) 
@@ -52,16 +56,21 @@ public class ChoicesAreaView : View
             var choiceElement = _choiceTemplate.Instantiate();
             var choiceLabel = choiceElement.Q<Label>(ChoiceLabelName);
 
-            choiceLabel.text = choice.Text;
+            choiceLabel.text = LocalizationSettings.StringDatabase.GetLocalizedString(ChoicesLocalizationTableName, choice.Text);
             choiceLabel.RegisterCallback<ClickEvent>(ev =>
             {
-                Debug.Log($"Choice selected: {choice.Label}");
+                onMakeChoice.Invoke(choice.Label);
             });
 
             _choicesArea.Add(choiceElement);
 
         }
 
+    }
+
+    public void ClearChoices()
+    {
+        _choicesArea.Clear();
     }
 
 }

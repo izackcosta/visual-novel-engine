@@ -22,6 +22,8 @@ public class VNSInterpreter : MonoBehaviour
 
     private bool _waitingFade = false;
 
+    private bool _waitingChoice = false;
+
     private Dictionary<string, Sprite> _spriteAssets = new Dictionary<string, Sprite>();
 
     private Dictionary<string, int> _labels = new Dictionary<string, int>();
@@ -43,6 +45,10 @@ public class VNSInterpreter : MonoBehaviour
     private GameEvent _fadeCompletedEvent;
     [SerializeField]
     private GameEvent _hideTextBoxRequestEvent;
+    [SerializeField]
+    private GameEvent _setChoicesRequestEvent;
+    [SerializeField]
+    private GameEvent _makeChoiceEvent;
 
     //COMMANDS
     private const string WAIT_COMMAND = "wait";
@@ -53,6 +59,7 @@ public class VNSInterpreter : MonoBehaviour
     private const string FADE_IN_SCREEN_COMMAND = "fade-in";
     private const string HIDE_TEXTBOX_COMMAND = "hide-text";
     private const string GOTO_COMMAND = "goto";
+    private const string SET_CHOICES_COMMAND = "set-choices";
 
     //DEFAULTS
     private const CharacterPosition CHARACTER_DEFAULT_POSITION = CharacterPosition.Middle;
@@ -73,12 +80,14 @@ public class VNSInterpreter : MonoBehaviour
     {
         _TextBoxContinueInterpretingRequest.Listeners += OnTextBoxContinueInterpretingRequest;
         _fadeCompletedEvent.Listeners += OnFadeCompleted;
+        _makeChoiceEvent.Listeners += OnChoiceMade;
     }
 
     private void OnDisable()
     {
         _TextBoxContinueInterpretingRequest.Listeners -= OnTextBoxContinueInterpretingRequest;
         _fadeCompletedEvent.Listeners -= OnFadeCompleted;
+        _makeChoiceEvent.Listeners -= OnChoiceMade;
     }
 
     private void Start()
@@ -228,7 +237,44 @@ public class VNSInterpreter : MonoBehaviour
             _programCounter = _labels[label];
 
         }
-        
+
+        //SET CHOICES
+        if (currentInstruction[0] == SET_CHOICES_COMMAND)
+        {
+
+            if (currentInstruction.Length < 3 || currentInstruction.Length % 2 == 0)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                return;
+            }
+
+            var choices = new List<ChoiceData>();
+
+            for(int i = 1; i < currentInstruction.Length; i += 2) 
+            {
+
+                var choiceText = currentInstruction[i];
+
+                var choiceLabel = currentInstruction[i + 1];
+
+                if(!choiceLabel.StartsWith(':'))
+                {
+                    Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_ERROR));
+                    return;
+                }
+
+                choices.Add(new ChoiceData(choiceText, choiceLabel));
+
+            }
+
+            _setChoicesRequestEvent.Invoke(new ChoiceArrayGameEvent(choices.ToArray()));
+
+            _waitingChoice = true;
+
+            await UniTask.WaitUntil(() => !_waitingChoice);
+
+        }
+
         _programCounter++;
 
     }
@@ -250,6 +296,13 @@ public class VNSInterpreter : MonoBehaviour
     {
         if(_waitingFade)
             _waitingFade = false;
+    }
+
+    private void OnChoiceMade(GameEventType eventType) 
+    {
+        var e = (StringGameEvent)eventType;
+        _programCounter = _labels[e.Value];
+        _waitingChoice = false;
     }
 
     private async UniTask PreLoad(List<string[]> script) 

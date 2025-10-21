@@ -10,43 +10,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
-  m_Name: Dialogues Shared Data
+  m_Name: Choices Shared Data
   m_EditorClassIdentifier: 
-  m_TableCollectionName: Dialogues
-  m_TableCollectionNameGuidString: 0183d7bf869c3854da4e4945a3cb90a0
+  m_TableCollectionName: Choices
+  m_TableCollectionNameGuidString: 380dc8e604e8a5646862a34e3eadf816
   m_Entries:
-  - m_Id: 22194921472
-    m_Key: test-1
+  - m_Id: 11260370944
+    m_Key: yes
     m_Metadata:
       m_Items: []
-  - m_Id: 17312168779776
-    m_Key: test-2
-    m_Metadata:
-      m_Items: []
-  - m_Id: 17315675217920
-    m_Key: test-3
-    m_Metadata:
-      m_Items: []
-  - m_Id: 3165356208922624
-    m_Key: test-4
-    m_Metadata:
-      m_Items: []
-  - m_Id: 15934958395432960
-    m_Key: choice-test-1
-    m_Metadata:
-      m_Items: []
-  - m_Id: 15934993015218176
-    m_Key: choice-test-2
+  - m_Id: 31510470656
+    m_Key: no
     m_Metadata:
       m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
-    rid: 7743176655338209560
+    rid: 2044544564166393934
   references:
     version: 2
     RefIds:
-    - rid: 7743176655338209560
+    - rid: 2044544564166393934
       type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
       data:
-        m_CustomEpoch: 1757200844493
+        m_CustomEpoch: 1761072390160

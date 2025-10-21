@@ -607,6 +607,8 @@ MonoBehaviour:
   _startFadeInEvent: {fileID: 11400000, guid: 875a23b7cf13e3548ae086c060d35fc8, type: 2}
   _fadeCompletedEvent: {fileID: 11400000, guid: 2762af4722c55b8459527edb504be1b0, type: 2}
   _hideTextBoxRequestEvent: {fileID: 11400000, guid: 9019f076ec3aa3b46a157b2dffe8698a, type: 2}
+  _setChoicesRequestEvent: {fileID: 11400000, guid: 9c1e9308b2c104b459075f3a43a6aacc, type: 2}
+  _makeChoiceEvent: {fileID: 11400000, guid: ba30f25bd4a4b6a4cb7990f359140b0f, type: 2}
 --- !u!1 &1628906862
 GameObject:
   m_ObjectHideFlags: 0
@@ -901,6 +903,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f6dde0c2e3e1554191cb692e5855ae6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _setChoicesRequestEvent: {fileID: 11400000, guid: 9c1e9308b2c104b459075f3a43a6aacc, type: 2}
+  _makeChoiceEvent: {fileID: 11400000, guid: ba30f25bd4a4b6a4cb7990f359140b0f, type: 2}
 --- !u!1 &2057785462
 GameObject:
   m_ObjectHideFlags: 0

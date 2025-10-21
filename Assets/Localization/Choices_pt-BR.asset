@@ -10,35 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
-  m_Name: Dialogues_pt-BR
+  m_Name: Choices_pt-BR
   m_EditorClassIdentifier: 
   m_LocaleId:
     m_Code: pt-BR
-  m_SharedData: {fileID: 11400000, guid: 0183d7bf869c3854da4e4945a3cb90a0, type: 2}
+  m_SharedData: {fileID: 11400000, guid: 380dc8e604e8a5646862a34e3eadf816, type: 2}
   m_Metadata:
     m_Items: []
   m_TableData:
-  - m_Id: 22194921472
-    m_Localized: "Voc\xEA escolheu \"Sim\""
-    m_Metadata:
-      m_Items: []
-  - m_Id: 17312168779776
-    m_Localized: "Voc\xEA escolheu \"N\xE3o\""
-    m_Metadata:
-      m_Items: []
-  - m_Id: 17315675217920
-    m_Localized: Qual a sua escolha?
-    m_Metadata:
-      m_Items: []
-  - m_Id: 3165356208922624
-    m_Localized: Mais tarde no metro...
-    m_Metadata:
-      m_Items: []
-  - m_Id: 15934958395432960
+  - m_Id: 11260370944
     m_Localized: sim
     m_Metadata:
       m_Items: []
-  - m_Id: 15934993015218176
+  - m_Id: 31510470656
     m_Localized: "n\xE3o"
     m_Metadata:
       m_Items: []

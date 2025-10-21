@@ -1,10 +1,13 @@
 say test
 
-goto :test
+set-choices yes :yes no :no
 
+:yes
+say test-1
+goto :skip
+
+:no
 say test-2
 
-say test-3
-
-:test
-say test-4
+:skip
+hide-text

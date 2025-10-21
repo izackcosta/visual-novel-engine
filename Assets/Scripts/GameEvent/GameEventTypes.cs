@@ -34,6 +34,18 @@ public struct SpriteGameEvent : SingleArgumentGameEventType<Sprite>
 
 }
 
+public struct ChoiceArrayGameEvent : SingleArgumentGameEventType<ChoiceData[]>
+{
+
+    public ChoiceData[] Value { get; private set; }
+
+    public ChoiceArrayGameEvent(ChoiceData[] value) 
+    {
+        Value = value;
+    }
+
+}
+
 public struct SendTextToTextBoxGameEvent : GameEventType
 {
 
