@@ -27,11 +27,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 17315675217920
-    m_Localized: What's you choice?
+    m_Localized: You chose "Maybe"
     m_Metadata:
       m_Items: []
   - m_Id: 3165356208922624
-    m_Localized: Later in the metro...
+    m_Localized: What's your choice?
     m_Metadata:
       m_Items: []
   - m_Id: 15934958395432960

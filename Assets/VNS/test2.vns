@@ -1,5 +1,6 @@
-say test
+say test-4
 
+:start
 set-choices yes :yes no :no
 
 :yes
@@ -8,6 +9,12 @@ goto :skip
 
 :no
 say test-2
+goto :skip
 
 :skip
-hide-text
+
+set-choices yes :yes no :no maybe :maybe
+
+:maybe
+say test-3
+goto :start
