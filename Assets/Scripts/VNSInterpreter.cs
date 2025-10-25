@@ -4,6 +4,8 @@ using UnityEngine;
 using System.Linq;
 using UnityEngine.AddressableAssets;
 using PrimeTween;
+using System;
+using System.Globalization;
 
 public class VNSInterpreter : MonoBehaviour
 {
@@ -24,9 +26,15 @@ public class VNSInterpreter : MonoBehaviour
 
     private bool _waitingChoice = false;
 
-    private Dictionary<string, Sprite> _spriteAssets = new Dictionary<string, Sprite>();
+    private bool _haltSignal = false;
 
-    private Dictionary<string, int> _labels = new Dictionary<string, int>();
+    private Dictionary<string, Sprite> _spriteAssets = new();
+
+    private Dictionary<string, int> _labels = new();
+
+    private Dictionary<string, float> _numbers = new();
+
+    private Dictionary<string, string> _strings = new();
 
     [Header("Game Events")]
     [SerializeField]
@@ -60,6 +68,9 @@ public class VNSInterpreter : MonoBehaviour
     private const string HIDE_TEXTBOX_COMMAND = "hide-text";
     private const string GOTO_COMMAND = "goto";
     private const string SET_CHOICES_COMMAND = "set-choices";
+    private const string VARIABLE_COMMAND = "var";
+    private const string PRINT_COMMAND = "print";
+    private const string HALT_COMMAND = "halt";
 
     //DEFAULTS
     private const CharacterPosition CHARACTER_DEFAULT_POSITION = CharacterPosition.Middle;
@@ -75,6 +86,14 @@ public class VNSInterpreter : MonoBehaviour
     private const string ERROR_FORMAT = "Error at line {0}: {1}";
     private const string INVALID_ARGUMENT_ERROR = "Invalid argument";
     private const string INVALID_ARGUMENT_NUMBER_ERROR = "Invalid number of arguments";
+    private const string VARIABLE_ALREADY_DEFINED_ERROR = "Variable already defined";
+    private const string VARIABLE_NOT_DEFINED_ERROR = "Variable not defined";
+    private readonly string INVALID_VARIABLE_NAME_ERROR = $"Invalid variable name. Variable names must start with '{VARIABLE_NUMBER_PREFIX}'(number) or '{VARIABLE_STRING_PREFIX}'(string)";
+
+    //MISC
+    private const char LABEL_PREFIX = ':';
+    private const char VARIABLE_NUMBER_PREFIX = '#';
+    private const char VARIABLE_STRING_PREFIX = '$';
 
     private void OnEnable()
     {
@@ -101,10 +120,11 @@ public class VNSInterpreter : MonoBehaviour
 
         _script = CreateScript(script);
         _programCounter = 0;
+        _haltSignal = false;
 
         await PreLoad(_script);
 
-        while (_programCounter < _script.Count) 
+        while (_programCounter < _script.Count && !_haltSignal) 
         {
             await ReadNextInstruction(_script);
         }
@@ -128,14 +148,12 @@ public class VNSInterpreter : MonoBehaviour
             if (currentInstruction.Length < 2)
             {
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
                 return;
             }
-            if (!int.TryParse(currentInstruction[1], out int waitTime))
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_ERROR));
-                return;
-            }
-            await UniTask.Delay(waitTime);
+
+            var value = ResolveNumber(currentInstruction[1]);
+            await UniTask.Delay((int)value);
         }
 
         //SAY
@@ -144,24 +162,37 @@ public class VNSInterpreter : MonoBehaviour
             if (currentInstruction.Length < 2)
             {
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
                 return;
             }
+
             _waitingTextBox = true;
-            var name = currentInstruction.Length > 2 ? currentInstruction[2] : null;
-            _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent(currentInstruction[1], name));
+            
+            var textKey = ResolveString(currentInstruction[1]);
+
+            var name = currentInstruction.Length > 2 ? ResolveString(currentInstruction[2]) : null;
+
+            _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent((string)textKey, (string)name));
+            
             await UniTask.WaitWhile(() => _waitingTextBox);
+
         }
 
         //BACKGROUNG
         if (currentInstruction[0] == BACKGROUND_COMMAND)
         {
+
             if (currentInstruction.Length < 2)
             {
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
                 return;
             }
+
             var backgroundSprite = _spriteAssets[string.Format(BACKGROUNDS_PATH_FORMAT, currentInstruction[1])];
+
             _changeBackgroundEvent.Invoke(new SpriteGameEvent(backgroundSprite));
+
         }
 
         //CREATE CHARACTER
@@ -171,20 +202,21 @@ public class VNSInterpreter : MonoBehaviour
             if(currentInstruction.Length < 2)
             {
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
                 return;
             }
 
-            var name = currentInstruction[1];
+            var name = ResolveString(currentInstruction[1]);
 
             var sprite = currentInstruction.Length > 2 ? _spriteAssets[string.Format(CHARACTERS_PATH_FORMAT, currentInstruction[2])] : null;
 
-            var position = currentInstruction.Length > 3 && int.TryParse(currentInstruction[3], out int pos) ? (CharacterPosition)pos : CHARACTER_DEFAULT_POSITION;
+            var position = currentInstruction.Length > 3 ? (CharacterPosition)(int)ResolveNumber(currentInstruction[3]) : CHARACTER_DEFAULT_POSITION;
 
-            var offsetX = currentInstruction.Length > 4 && float.TryParse(currentInstruction[4], out float x) ? x : 0;
+            var offsetX = currentInstruction.Length > 4 ? ResolveNumber(currentInstruction[4]) : 0;
 
-            var offsetY = currentInstruction.Length > 5 && float.TryParse(currentInstruction[5], out float y) ? y : 0;
+            var offsetY = currentInstruction.Length > 5 ? ResolveNumber(currentInstruction[5]) : 0;
 
-            var inverted = currentInstruction.Length > 6 && int.TryParse(currentInstruction[6], out int inv) ? inv > 0 : false;
+            var inverted = currentInstruction.Length > 6 ? ResolveBoolean(currentInstruction[6]) : false;
 
             _createCharacterEvent.Invoke(new CreateCharacterGameEvent(name, sprite, position, offsetX, offsetY, inverted));
 
@@ -194,11 +226,11 @@ public class VNSInterpreter : MonoBehaviour
         if (currentInstruction[0] == FADE_IN_SCREEN_COMMAND || currentInstruction[0] == FADE_OUT_SCREEN_COMMAND)
         {
 
-            var duration = currentInstruction.Length > 1 && float.TryParse(currentInstruction[1], out float dur) ? dur : FADE_DEFAULT_DURATION;
+            var duration = currentInstruction.Length > 1 ? ResolveNumber(currentInstruction[1]) : FADE_DEFAULT_DURATION;
 
-            var transitionMode = currentInstruction.Length > 2 && int.TryParse(currentInstruction[2], out int mode) ? (TransitionMode)mode : FADE_DEFAULT_TRANSITION;
+            var transitionMode = currentInstruction.Length > 2 ? (TransitionMode)(int)ResolveNumber(currentInstruction[2]) : FADE_DEFAULT_TRANSITION;
 
-            var ease = currentInstruction.Length > 3 && int.TryParse(currentInstruction[3], out int easeInt) ? (Ease)easeInt : FADE_DEFAULT_EASE;
+            var ease = currentInstruction.Length > 3 ? (Ease)(int)ResolveNumber(currentInstruction[3]) : FADE_DEFAULT_EASE;
 
             _waitingFade = true;
 
@@ -226,15 +258,9 @@ public class VNSInterpreter : MonoBehaviour
                 return;
             }
 
-            var label = currentInstruction[1];
+            var line = ResolveNumber(currentInstruction[1]);
 
-            if (!_labels.ContainsKey(label))
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_ERROR));
-                return;
-            }
-
-            _programCounter = _labels[label];
+            _programCounter = (int)line;
 
         }
 
@@ -245,6 +271,7 @@ public class VNSInterpreter : MonoBehaviour
             if (currentInstruction.Length < 3 || currentInstruction.Length % 2 == 0)
             {
                 Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
                 return;
             }
 
@@ -253,17 +280,11 @@ public class VNSInterpreter : MonoBehaviour
             for(int i = 1; i < currentInstruction.Length; i += 2) 
             {
 
-                var choiceText = currentInstruction[i];
+                var choiceText = ResolveString(currentInstruction[i]);
 
-                var choiceLabel = currentInstruction[i + 1];
+                var choiceLabel = ResolveNumber(currentInstruction[i + 1]);
 
-                if(!choiceLabel.StartsWith(':'))
-                {
-                    Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_ERROR));
-                    return;
-                }
-
-                choices.Add(new ChoiceData(choiceText, choiceLabel));
+                choices.Add(new ChoiceData(choiceText, (int)choiceLabel));
 
             }
 
@@ -273,6 +294,134 @@ public class VNSInterpreter : MonoBehaviour
 
             await UniTask.WaitUntil(() => !_waitingChoice);
 
+        }
+
+        //CREATE VARIABLE
+        if (currentInstruction[0] == VARIABLE_COMMAND)
+        {
+
+            if (currentInstruction.Length < 3)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var varKey = currentInstruction[1];
+
+            if (varKey.StartsWith(VARIABLE_NUMBER_PREFIX)) 
+            {
+                var varValue = ResolveNumber(currentInstruction[2]);
+                if (!_numbers.ContainsKey(varKey))
+                    _numbers.TryAdd(varKey, varValue);
+                else
+                {
+                    Debug.LogError(CreateErrorLog(VARIABLE_ALREADY_DEFINED_ERROR));
+                    _haltSignal = true;
+                    return;
+                }
+            }
+
+            else if(varKey.StartsWith(VARIABLE_STRING_PREFIX))
+            {
+                var varValue = ResolveString(currentInstruction[2]);
+                if (!_strings.ContainsKey(varKey))
+                    _strings.TryAdd(varKey, varValue);
+                else
+                {
+                    Debug.LogError(CreateErrorLog(VARIABLE_ALREADY_DEFINED_ERROR));
+                    _haltSignal = true;
+                    return;
+                }
+            }
+
+            else 
+            {
+                Debug.LogError(CreateErrorLog(INVALID_VARIABLE_NAME_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+        }
+
+        //SET VARIABLE
+        if (currentInstruction[0].StartsWith(VARIABLE_NUMBER_PREFIX)) 
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var varKey = currentInstruction[0];
+
+            var varValue = ResolveNumber(currentInstruction[1]);
+
+            if (_numbers.ContainsKey(varKey))
+                _numbers[varKey] = varValue;
+            else 
+            {
+                Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+        }
+
+        if (currentInstruction[0].StartsWith(VARIABLE_STRING_PREFIX))
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var varKey = currentInstruction[0];
+
+            var varValue = ResolveString(currentInstruction[1]);
+
+            if (_strings.ContainsKey(varKey))
+                _strings[varKey] = varValue;
+            else
+            {
+                Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+        }
+
+        //PRINT
+        if (currentInstruction[0] == PRINT_COMMAND)
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var valueToPrint = string.Empty;
+
+            for(int i= 1; i < currentInstruction.Length; i++) 
+            {
+                valueToPrint += GetPrintable(currentInstruction[i]) + ' ';
+            }
+
+            Debug.Log(valueToPrint);
+
+        }
+
+        //HALT
+        if (currentInstruction[0] == HALT_COMMAND)
+        {
+            _haltSignal = true;
+            return;
         }
 
         _programCounter++;
@@ -300,8 +449,8 @@ public class VNSInterpreter : MonoBehaviour
 
     private void OnChoiceMade(GameEventType eventType) 
     {
-        var e = (StringGameEvent)eventType;
-        _programCounter = _labels[e.Value];
+        var e = (IntegerGameEvent)eventType;
+        _programCounter = e.Value;
         _waitingChoice = false;
     }
 
@@ -313,6 +462,10 @@ public class VNSInterpreter : MonoBehaviour
 
             if (line.Length < 1)
                 continue;
+
+            //GET LABELS
+            if (line[0].Length > 1 && line[0].StartsWith(LABEL_PREFIX))
+                _labels.Add(line[0], script.IndexOf(line));
 
             //GET CHARACTER SPRITES
             if (line[0] == CREATE_CHARACTER_COMMAND)
@@ -340,11 +493,57 @@ public class VNSInterpreter : MonoBehaviour
 
             }
 
-            //GET LABELS
-            if (line[0].Length > 1 && line[0].StartsWith(':'))
-                _labels.Add(line[0], script.IndexOf(line));
-
         }
+
+    }
+
+    private float ResolveNumber(string value)
+    {
+
+        if (float.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var f)) 
+            return f;
+
+        if(_numbers.ContainsKey(value))
+            return _numbers[value];
+
+        if(_strings.ContainsKey(value) && _labels.ContainsKey(_strings[value]))
+            return _labels[_strings[value]];
+
+        if (_labels.ContainsKey(value))
+            return _labels[value];
+
+        _haltSignal = true;
+        throw new Exception(CreateErrorLog(INVALID_ARGUMENT_ERROR));
+
+        return 0;
+
+    }
+
+    private string ResolveString(string value) 
+    {
+
+        if (_strings.ContainsKey(value))
+            return _strings[value];
+
+        return value;
+
+    }
+
+    private bool ResolveBoolean(string value) => ResolveNumber(value) > 0;
+
+    private string GetPrintable(string parameter) 
+    {
+
+        if (_numbers.ContainsKey(parameter))
+            return _numbers[parameter].ToString();
+
+        if (_strings.ContainsKey(parameter))
+            return _strings[parameter];
+
+        if (_labels.ContainsKey(parameter))
+            return _labels[parameter].ToString();
+
+        return parameter;
 
     }
 

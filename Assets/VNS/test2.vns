@@ -1,20 +1,18 @@
-say test-4
+var $name john
+var #pos 1
+var #fx 1.5
+var #fy 1.5
+var #inv 1
+create-character $john John_Happy #pos #fx #fy #inv
 
-:start
-set-choices yes :yes no :no
+var #wait 1000
 
-:yes
+wait #wait
 say test-1
-goto :skip
 
-:no
-say test-2
-goto :skip
+var #dur 1.5
+var #mode 1
 
-:skip
+fade-out #dur #mode
 
-set-choices yes :yes no :no maybe :maybe
-
-:maybe
-say test-3
-goto :start
+print hello world #mode

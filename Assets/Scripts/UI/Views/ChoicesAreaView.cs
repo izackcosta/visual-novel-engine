@@ -7,9 +7,9 @@ public struct ChoiceData
 {
 
     public string Text;
-    public string Label;
+    public int Label;
 
-    public ChoiceData(string text, string label)
+    public ChoiceData(string text, int label)
     {
         Text = text;
         Label = label;
@@ -47,7 +47,7 @@ public class ChoicesAreaView : View
         _choicesArea.visible = true;
     }
 
-    public void SetChoices(ChoiceData[] choices, Action<string> onMakeChoice)
+    public void SetChoices(ChoiceData[] choices, Action<int> onMakeChoice)
     {
 
         foreach (ChoiceData choice in choices) 

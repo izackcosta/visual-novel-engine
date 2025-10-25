@@ -26,9 +26,9 @@ public class ChoicesAreaController : Controller<ChoicesAreaView>
         _view.Show();
     }
 
-    private void OnChoiceMade(string label) 
+    private void OnChoiceMade(int label) 
     {
-        _makeChoiceEvent?.Invoke(new StringGameEvent(label));
+        _makeChoiceEvent?.Invoke(new IntegerGameEvent(label));
         _view.ClearChoices();
         _view.Hide();
     }
