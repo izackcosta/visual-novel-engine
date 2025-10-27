@@ -1,0 +1,6 @@
+var $s1 hello
+var $s2 \u0020world!
+
+$s1 + $s2
+
+print $s1

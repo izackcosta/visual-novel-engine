@@ -97,6 +97,7 @@ public class VNSInterpreter : MonoBehaviour
     private const string VARIABLE_NOT_DEFINED_ERROR = "Variable not defined";
     private readonly string INVALID_VARIABLE_NAME_ERROR = $"Invalid variable name. Variable names must start with '{VARIABLE_NUMBER_PREFIX}'(number) or '{VARIABLE_STRING_PREFIX}'(string)";
     private const string IF_VARIABLE_TYPE_ERROR = "IF statement overloads with more than one parameter should take variables(not literal values) of the same type as arguments";
+    private const string INVALID_OPERATOR_ERROR = "Invalid operator";
 
     //MISC
     private const char LABEL_PREFIX = ':';
@@ -365,10 +366,42 @@ public class VNSInterpreter : MonoBehaviour
 
             var varKey = currentInstruction[0];
 
-            var varValue = ResolveNumber(currentInstruction[1]);
+            var varValue = (float)0;
 
-            if (_numbers.ContainsKey(varKey))
-                _numbers[varKey] = varValue;
+            if (_numbers.ContainsKey(varKey)) 
+            {
+                if(currentInstruction.Length == 2) 
+                {
+                    varValue = ResolveNumber(currentInstruction[1]);
+                    _numbers[varKey] = varValue;
+                }
+                else 
+                {
+                    varValue = ResolveNumber(currentInstruction[2]);
+                    switch (currentInstruction[1])
+                    {
+                        case "+":
+                            _numbers[varKey] += varValue;
+                            break;
+                        case "-":
+                            _numbers[varKey] -= varValue;
+                            break;
+                        case "*":
+                            _numbers[varKey] *= varValue;
+                            break;
+                        case "/":
+                            _numbers[varKey] /= varValue;
+                            break;
+                        case "%":
+                            _numbers[varKey] %= varValue;
+                            break;
+                        default:
+                            Debug.LogError(CreateErrorLog(INVALID_OPERATOR_ERROR));
+                            _haltSignal = true;
+                            return;
+                    }
+                }
+            }
             else 
             {
                 Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
@@ -390,10 +423,29 @@ public class VNSInterpreter : MonoBehaviour
 
             var varKey = currentInstruction[0];
 
-            var varValue = ResolveString(currentInstruction[1]);
+            var varValue = string.Empty; 
+                ResolveString(currentInstruction[1]);
 
-            if (_strings.ContainsKey(varKey))
-                _strings[varKey] = varValue;
+            if (_strings.ContainsKey(varKey)) 
+            {
+                if (currentInstruction.Length == 2)
+                {
+                    varValue = ResolveString(currentInstruction[1]);
+                    _strings[varKey] = varValue;
+                }
+                else if (currentInstruction[1] == "+") 
+                {
+                    varValue = ResolveString(currentInstruction[2]);
+                    _strings[varKey] += varValue;
+                }
+                else
+                {
+                    Debug.LogError(CreateErrorLog(INVALID_OPERATOR_ERROR));
+                    _haltSignal = true;
+                    return;
+
+                }
+            }
             else
             {
                 Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
