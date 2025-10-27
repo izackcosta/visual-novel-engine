@@ -1,18 +1,9 @@
-var $name john
-var #pos 1
-var #fx 1.5
-var #fy 1.5
-var #inv 1
-create-character $john John_Happy #pos #fx #fy #inv
+var $a a
+var $b b
 
-var #wait 1000
+if $a != $b
+say true
+halt
+end
 
-wait #wait
-say test-1
-
-var #dur 1.5
-var #mode 1
-
-fade-out #dur #mode
-
-print hello world #mode
+say false

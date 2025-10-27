@@ -36,6 +36,8 @@ public class VNSInterpreter : MonoBehaviour
 
     private Dictionary<string, string> _strings = new();
 
+    private Dictionary<int, int> _branchs = new();
+
     [Header("Game Events")]
     [SerializeField]
     private GameEvent _sendTextToTextBox;
@@ -70,6 +72,8 @@ public class VNSInterpreter : MonoBehaviour
     private const string SET_CHOICES_COMMAND = "set-choices";
     private const string VARIABLE_COMMAND = "var";
     private const string PRINT_COMMAND = "print";
+    private const string IF_COMMAND = "if";
+    private const string END_COMMAND = "end";
     private const string HALT_COMMAND = "halt";
 
     //DEFAULTS
@@ -89,6 +93,7 @@ public class VNSInterpreter : MonoBehaviour
     private const string VARIABLE_ALREADY_DEFINED_ERROR = "Variable already defined";
     private const string VARIABLE_NOT_DEFINED_ERROR = "Variable not defined";
     private readonly string INVALID_VARIABLE_NAME_ERROR = $"Invalid variable name. Variable names must start with '{VARIABLE_NUMBER_PREFIX}'(number) or '{VARIABLE_STRING_PREFIX}'(string)";
+    private const string IF_VARIABLE_TYPE_ERROR = "IF statement overloads with more than one parameter should take variables(not literal values) of the same type as arguments";
 
     //MISC
     private const char LABEL_PREFIX = ':';
@@ -417,6 +422,88 @@ public class VNSInterpreter : MonoBehaviour
 
         }
 
+        //IF
+        if (currentInstruction[0] == IF_COMMAND) 
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var result = false;
+
+            if(currentInstruction.Length == 2)
+                result = ResolveBoolean(currentInstruction[1]);
+
+            if (currentInstruction.Length > 3) 
+            {
+
+                if(currentInstruction[1].StartsWith(VARIABLE_NUMBER_PREFIX) && currentInstruction[3].StartsWith(VARIABLE_NUMBER_PREFIX)) 
+                {
+
+                    if(!_numbers.ContainsKey(currentInstruction[1]) || !_numbers.ContainsKey(currentInstruction[3])) 
+                    {
+                        Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                        _haltSignal = true;
+                        return;
+                    }
+
+                    if (currentInstruction[2] == "==")
+                        result = _numbers[currentInstruction[1]] == _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "!=")
+                        result = _numbers[currentInstruction[1]] != _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == ">")
+                        result = _numbers[currentInstruction[1]] > _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "<")
+                        result = _numbers[currentInstruction[1]] < _numbers[currentInstruction[3]];
+
+                    if(currentInstruction[2] == ">=")
+                        result = _numbers[currentInstruction[1]] >= _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "<=")
+                        result = _numbers[currentInstruction[1]] <= _numbers[currentInstruction[3]];
+
+                }
+
+                else if (currentInstruction[1].StartsWith(VARIABLE_STRING_PREFIX) && currentInstruction[3].StartsWith(VARIABLE_STRING_PREFIX))
+                {
+
+                    if (!_strings.ContainsKey(currentInstruction[1]) || !_strings.ContainsKey(currentInstruction[3]))
+                    {
+                        Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                        _haltSignal = true;
+                        return;
+                    }
+
+                    if (currentInstruction[2] == "==")
+                        result = _strings[currentInstruction[1]] == _strings[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "!=")
+                        result = _strings[currentInstruction[1]] != _strings[currentInstruction[3]];
+
+                }
+
+                else 
+                {
+                    Debug.LogError(CreateErrorLog(IF_VARIABLE_TYPE_ERROR));
+                    _haltSignal = true;
+                    return;
+
+                }
+
+            }
+
+            if (!result)
+                _programCounter = _branchs[_programCounter];
+
+        }
+
         //HALT
         if (currentInstruction[0] == HALT_COMMAND)
         {
@@ -457,23 +544,32 @@ public class VNSInterpreter : MonoBehaviour
     private async UniTask PreLoad(List<string[]> script) 
     {
 
-        foreach (string[] line in script) 
+        var branchStack = new Stack<int>();
+
+        for (int i = 0; i < script.Count; i++) 
         {
 
-            if (line.Length < 1)
+            if (script[i].Length < 1)
                 continue;
 
             //GET LABELS
-            if (line[0].Length > 1 && line[0].StartsWith(LABEL_PREFIX))
-                _labels.Add(line[0], script.IndexOf(line));
+            if (script[i][0].Length > 1 && script[i][0].StartsWith(LABEL_PREFIX))
+                _labels.Add(script[i][0], branchStack.Pop());
+
+            //BRANCHS
+            if(script[i][0] == IF_COMMAND)
+                branchStack.Push(i);
+
+            if (script[i][0] == END_COMMAND)
+                _branchs.Add(branchStack.Pop(), i);
 
             //GET CHARACTER SPRITES
-            if (line[0] == CREATE_CHARACTER_COMMAND)
+            if (script[i][0] == CREATE_CHARACTER_COMMAND)
             {
 
-                if (line.Length > 2)
+                if (script[i].Length > 2)
                 {
-                    var path = string.Format(CHARACTERS_PATH_FORMAT, line[2]);
+                    var path = string.Format(CHARACTERS_PATH_FORMAT, script[i][2]);
                     var sprite = await Addressables.LoadAssetAsync<Sprite>(path);
                     _spriteAssets.Add(path, sprite);
                 }
@@ -481,12 +577,12 @@ public class VNSInterpreter : MonoBehaviour
             }
 
             //GET BACKGROUND SPRITES
-            if (line[0] == BACKGROUND_COMMAND)
+            if (script[i][0] == BACKGROUND_COMMAND)
             {
 
-                if (line.Length > 1)
+                if (script[i].Length > 1)
                 {
-                    var path = string.Format(BACKGROUNDS_PATH_FORMAT, line[1]);
+                    var path = string.Format(BACKGROUNDS_PATH_FORMAT, script[i][1]);
                     var sprite = await Addressables.LoadAssetAsync<Sprite>(path);
                     _spriteAssets.Add(path, sprite);
                 }
@@ -514,8 +610,6 @@ public class VNSInterpreter : MonoBehaviour
 
         _haltSignal = true;
         throw new Exception(CreateErrorLog(INVALID_ARGUMENT_ERROR));
-
-        return 0;
 
     }
 
