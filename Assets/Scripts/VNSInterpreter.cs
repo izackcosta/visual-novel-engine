@@ -38,6 +38,8 @@ public class VNSInterpreter : MonoBehaviour
 
     private Dictionary<int, int> _branchs = new();
 
+    private Dictionary<int, int> _repeatCounters = new();
+
     [Header("Game Events")]
     [SerializeField]
     private GameEvent _sendTextToTextBox;
@@ -73,6 +75,7 @@ public class VNSInterpreter : MonoBehaviour
     private const string VARIABLE_COMMAND = "var";
     private const string PRINT_COMMAND = "print";
     private const string IF_COMMAND = "if";
+    private const string REPEAT_COMMAND = "repeat";
     private const string END_COMMAND = "end";
     private const string HALT_COMMAND = "halt";
 
@@ -504,6 +507,58 @@ public class VNSInterpreter : MonoBehaviour
 
         }
 
+        //REPEAT
+        if (currentInstruction[0] == REPEAT_COMMAND) 
+        {
+
+            if(currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            if (_repeatCounters.ContainsKey(_programCounter)) 
+            {
+                _programCounter++;
+                return;
+            }
+
+            var repeatCount = (int)ResolveNumber(currentInstruction[1]);
+
+            if(repeatCount <= 0) 
+            {
+                _programCounter = _branchs[_programCounter];
+                return;
+            }
+
+            _repeatCounters.Add(_programCounter, (int)ResolveNumber(currentInstruction[1]));
+
+        }
+
+        //END
+        if (currentInstruction[0] == END_COMMAND) 
+        {
+
+            var startLine = _branchs.First(x => x.Value == _programCounter).Key;
+
+            if (_repeatCounters.ContainsKey(startLine))
+            {
+                _repeatCounters[startLine]--;
+
+                if (_repeatCounters[startLine] > 0)
+                {
+                    _programCounter = startLine;
+                    return;
+                }
+                else
+                {
+                    _repeatCounters.Remove(startLine);
+                }
+            }
+
+        }
+
         //HALT
         if (currentInstruction[0] == HALT_COMMAND)
         {
@@ -557,7 +612,7 @@ public class VNSInterpreter : MonoBehaviour
                 _labels.Add(script[i][0], branchStack.Pop());
 
             //BRANCHS
-            if(script[i][0] == IF_COMMAND)
+            if(script[i][0] == IF_COMMAND || script[i][0] == REPEAT_COMMAND)
                 branchStack.Push(i);
 
             if (script[i][0] == END_COMMAND)

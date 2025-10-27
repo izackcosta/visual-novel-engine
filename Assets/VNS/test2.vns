@@ -1,9 +1,0 @@
-var $a a
-var $b b
-
-if $a != $b
-say true
-halt
-end
-
-say false
