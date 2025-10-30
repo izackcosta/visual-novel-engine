@@ -124,7 +124,7 @@ public class VNSInterpreter : MonoBehaviour
             Interpret(_entryScript).Forget();
     }
 
-    private async UniTask Interpret(VNSAsset script) 
+    private async UniTask Interpret(VNSAsset script)
     {
 
         _script = CreateScript(script);
@@ -133,490 +133,39 @@ public class VNSInterpreter : MonoBehaviour
 
         await PreLoad(_script);
 
-        while (_programCounter < _script.Count && !_haltSignal) 
+        while (_programCounter < _script.Count && !_haltSignal)
         {
             await ReadNextInstruction(_script);
         }
 
     }
 
-    private async UniTask ReadNextInstruction(List<string[]> script) 
+    private async UniTask ReadNextInstruction(List<string[]> script)
     {
 
         var currentInstruction = script[_programCounter];
 
-        if(currentInstruction.Length < 1) 
+        if (currentInstruction.Length < 1)
         {
             _programCounter++;
             return;
         }
 
-        //WAIT
-        if (currentInstruction[0] == WAIT_COMMAND)
-        {
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var value = ResolveNumber(currentInstruction[1]);
-            await UniTask.Delay((int)value);
-        }
-
-        //SAY
-        if (currentInstruction[0] == SAY_COMMAND)
-        {
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            _waitingTextBox = true;
-            
-            var textKey = ResolveString(currentInstruction[1]);
-
-            var name = currentInstruction.Length > 2 ? ResolveString(currentInstruction[2]) : null;
-
-            _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent((string)textKey, (string)name));
-            
-            await UniTask.WaitWhile(() => _waitingTextBox);
-
-        }
-
-        //BACKGROUNG
-        if (currentInstruction[0] == BACKGROUND_COMMAND)
-        {
-
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var backgroundSprite = _spriteAssets[string.Format(BACKGROUNDS_PATH_FORMAT, currentInstruction[1])];
-
-            _changeBackgroundEvent.Invoke(new SpriteGameEvent(backgroundSprite));
-
-        }
-
-        //CREATE CHARACTER
-        if (currentInstruction[0] == CREATE_CHARACTER_COMMAND) 
-        {
-
-            if(currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var name = ResolveString(currentInstruction[1]);
-
-            var sprite = currentInstruction.Length > 2 ? _spriteAssets[string.Format(CHARACTERS_PATH_FORMAT, currentInstruction[2])] : null;
-
-            var position = currentInstruction.Length > 3 ? (CharacterPosition)(int)ResolveNumber(currentInstruction[3]) : CHARACTER_DEFAULT_POSITION;
-
-            var offsetX = currentInstruction.Length > 4 ? ResolveNumber(currentInstruction[4]) : 0;
-
-            var offsetY = currentInstruction.Length > 5 ? ResolveNumber(currentInstruction[5]) : 0;
-
-            var inverted = currentInstruction.Length > 6 ? ResolveBoolean(currentInstruction[6]) : false;
-
-            _createCharacterEvent.Invoke(new CreateCharacterGameEvent(name, sprite, position, offsetX, offsetY, inverted));
-
-        }
-
-        //FADE IN / FADE OUT SCREEN
-        if (currentInstruction[0] == FADE_IN_SCREEN_COMMAND || currentInstruction[0] == FADE_OUT_SCREEN_COMMAND)
-        {
-
-            var duration = currentInstruction.Length > 1 ? ResolveNumber(currentInstruction[1]) : FADE_DEFAULT_DURATION;
-
-            var transitionMode = currentInstruction.Length > 2 ? (TransitionMode)(int)ResolveNumber(currentInstruction[2]) : FADE_DEFAULT_TRANSITION;
-
-            var ease = currentInstruction.Length > 3 ? (Ease)(int)ResolveNumber(currentInstruction[3]) : FADE_DEFAULT_EASE;
-
-            _waitingFade = true;
-
-            var fadeEvent = currentInstruction[0] == FADE_IN_SCREEN_COMMAND ? _startFadeInEvent : _startFadeOutEvent;
-
-            fadeEvent.Invoke(new FadeGameEvent(duration, transitionMode, ease));
-
-            await UniTask.WaitWhile(() => _waitingFade);
-
-        }
-
-        //HIDE TEXTBOX
-        if (currentInstruction[0] == HIDE_TEXTBOX_COMMAND)
-        {
-            _hideTextBoxRequestEvent.Invoke(new NoArgGameEvent());
-        }
-
-        //GOTO
-        if (currentInstruction[0] == GOTO_COMMAND)
-        {
-
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                return;
-            }
-
-            var line = ResolveNumber(currentInstruction[1]);
-
-            _programCounter = (int)line;
-
-        }
-
-        //SET CHOICES
-        if (currentInstruction[0] == SET_CHOICES_COMMAND)
-        {
-
-            if (currentInstruction.Length < 3 || currentInstruction.Length % 2 == 0)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var choices = new List<ChoiceData>();
-
-            for(int i = 1; i < currentInstruction.Length; i += 2) 
-            {
-
-                var choiceText = ResolveString(currentInstruction[i]);
-
-                var choiceLabel = ResolveNumber(currentInstruction[i + 1]);
-
-                choices.Add(new ChoiceData(choiceText, (int)choiceLabel));
-
-            }
-
-            _setChoicesRequestEvent.Invoke(new ChoiceArrayGameEvent(choices.ToArray()));
-
-            _waitingChoice = true;
-
-            await UniTask.WaitUntil(() => !_waitingChoice);
-
-        }
-
-        //CREATE VARIABLE
-        if (currentInstruction[0] == VARIABLE_COMMAND)
-        {
-
-            if (currentInstruction.Length < 3)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var varKey = currentInstruction[1];
-
-            if (varKey.StartsWith(VARIABLE_NUMBER_PREFIX)) 
-            {
-                var varValue = ResolveNumber(currentInstruction[2]);
-                if (!_numbers.ContainsKey(varKey))
-                    _numbers.TryAdd(varKey, varValue);
-                else
-                {
-                    Debug.LogError(CreateErrorLog(VARIABLE_ALREADY_DEFINED_ERROR));
-                    _haltSignal = true;
-                    return;
-                }
-            }
-
-            else if(varKey.StartsWith(VARIABLE_STRING_PREFIX))
-            {
-                var varValue = ResolveString(currentInstruction[2]);
-                if (!_strings.ContainsKey(varKey))
-                    _strings.TryAdd(varKey, varValue);
-                else
-                {
-                    Debug.LogError(CreateErrorLog(VARIABLE_ALREADY_DEFINED_ERROR));
-                    _haltSignal = true;
-                    return;
-                }
-            }
-
-            else 
-            {
-                Debug.LogError(CreateErrorLog(INVALID_VARIABLE_NAME_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-        }
-
-        //SET VARIABLE
-        if (currentInstruction[0].StartsWith(VARIABLE_NUMBER_PREFIX)) 
-        {
-
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var varKey = currentInstruction[0];
-
-            var varValue = (float)0;
-
-            if (_numbers.ContainsKey(varKey)) 
-            {
-                if(currentInstruction.Length == 2) 
-                {
-                    varValue = ResolveNumber(currentInstruction[1]);
-                    _numbers[varKey] = varValue;
-                }
-                else 
-                {
-                    varValue = ResolveNumber(currentInstruction[2]);
-                    switch (currentInstruction[1])
-                    {
-                        case "+":
-                            _numbers[varKey] += varValue;
-                            break;
-                        case "-":
-                            _numbers[varKey] -= varValue;
-                            break;
-                        case "*":
-                            _numbers[varKey] *= varValue;
-                            break;
-                        case "/":
-                            _numbers[varKey] /= varValue;
-                            break;
-                        case "%":
-                            _numbers[varKey] %= varValue;
-                            break;
-                        default:
-                            Debug.LogError(CreateErrorLog(INVALID_OPERATOR_ERROR));
-                            _haltSignal = true;
-                            return;
-                    }
-                }
-            }
-            else 
-            {
-                Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-        }
-
-        if (currentInstruction[0].StartsWith(VARIABLE_STRING_PREFIX))
-        {
-
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var varKey = currentInstruction[0];
-
-            var varValue = string.Empty; 
-                ResolveString(currentInstruction[1]);
-
-            if (_strings.ContainsKey(varKey)) 
-            {
-                if (currentInstruction.Length == 2)
-                {
-                    varValue = ResolveString(currentInstruction[1]);
-                    _strings[varKey] = varValue;
-                }
-                else if (currentInstruction[1] == "+") 
-                {
-                    varValue = ResolveString(currentInstruction[2]);
-                    _strings[varKey] += varValue;
-                }
-                else
-                {
-                    Debug.LogError(CreateErrorLog(INVALID_OPERATOR_ERROR));
-                    _haltSignal = true;
-                    return;
-
-                }
-            }
-            else
-            {
-                Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-        }
-
-        //PRINT
-        if (currentInstruction[0] == PRINT_COMMAND)
-        {
-
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var valueToPrint = string.Empty;
-
-            for(int i= 1; i < currentInstruction.Length; i++) 
-            {
-                valueToPrint += GetPrintable(currentInstruction[i]) + ' ';
-            }
-
-            Debug.Log(valueToPrint);
-
-        }
-
-        //IF
-        if (currentInstruction[0] == IF_COMMAND) 
-        {
-
-            if (currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            var result = false;
-
-            if(currentInstruction.Length == 2)
-                result = ResolveBoolean(currentInstruction[1]);
-
-            if (currentInstruction.Length > 3) 
-            {
-
-                if(currentInstruction[1].StartsWith(VARIABLE_NUMBER_PREFIX) && currentInstruction[3].StartsWith(VARIABLE_NUMBER_PREFIX)) 
-                {
-
-                    if(!_numbers.ContainsKey(currentInstruction[1]) || !_numbers.ContainsKey(currentInstruction[3])) 
-                    {
-                        Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
-                        _haltSignal = true;
-                        return;
-                    }
-
-                    if (currentInstruction[2] == "==")
-                        result = _numbers[currentInstruction[1]] == _numbers[currentInstruction[3]];
-
-                    if (currentInstruction[2] == "!=")
-                        result = _numbers[currentInstruction[1]] != _numbers[currentInstruction[3]];
-
-                    if (currentInstruction[2] == ">")
-                        result = _numbers[currentInstruction[1]] > _numbers[currentInstruction[3]];
-
-                    if (currentInstruction[2] == "<")
-                        result = _numbers[currentInstruction[1]] < _numbers[currentInstruction[3]];
-
-                    if(currentInstruction[2] == ">=")
-                        result = _numbers[currentInstruction[1]] >= _numbers[currentInstruction[3]];
-
-                    if (currentInstruction[2] == "<=")
-                        result = _numbers[currentInstruction[1]] <= _numbers[currentInstruction[3]];
-
-                }
-
-                else if (currentInstruction[1].StartsWith(VARIABLE_STRING_PREFIX) && currentInstruction[3].StartsWith(VARIABLE_STRING_PREFIX))
-                {
-
-                    if (!_strings.ContainsKey(currentInstruction[1]) || !_strings.ContainsKey(currentInstruction[3]))
-                    {
-                        Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
-                        _haltSignal = true;
-                        return;
-                    }
-
-                    if (currentInstruction[2] == "==")
-                        result = _strings[currentInstruction[1]] == _strings[currentInstruction[3]];
-
-                    if (currentInstruction[2] == "!=")
-                        result = _strings[currentInstruction[1]] != _strings[currentInstruction[3]];
-
-                }
-
-                else 
-                {
-                    Debug.LogError(CreateErrorLog(IF_VARIABLE_TYPE_ERROR));
-                    _haltSignal = true;
-                    return;
-
-                }
-
-            }
-
-            if (!result)
-                _programCounter = _branchs[_programCounter];
-
-        }
-
-        //REPEAT
-        if (currentInstruction[0] == REPEAT_COMMAND) 
-        {
-
-            if(currentInstruction.Length < 2)
-            {
-                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
-                _haltSignal = true;
-                return;
-            }
-
-            if (_repeatCounters.ContainsKey(_programCounter)) 
-            {
-                _programCounter++;
-                return;
-            }
-
-            var repeatCount = (int)ResolveNumber(currentInstruction[1]);
-
-            if(repeatCount <= 0) 
-            {
-                _programCounter = _branchs[_programCounter];
-                return;
-            }
-
-            _repeatCounters.Add(_programCounter, (int)ResolveNumber(currentInstruction[1]));
-
-        }
-
-        //END
-        if (currentInstruction[0] == END_COMMAND) 
-        {
-
-            var startLine = _branchs.First(x => x.Value == _programCounter).Key;
-
-            if (_repeatCounters.ContainsKey(startLine))
-            {
-                _repeatCounters[startLine]--;
-
-                if (_repeatCounters[startLine] > 0)
-                {
-                    _programCounter = startLine;
-                    return;
-                }
-                else
-                {
-                    _repeatCounters.Remove(startLine);
-                }
-            }
-
-        }
-
-        //HALT
-        if (currentInstruction[0] == HALT_COMMAND)
-        {
-            _haltSignal = true;
-            return;
-        }
+        await Wait(currentInstruction);
+        await Say(currentInstruction);
+        Background(currentInstruction);
+        CreateCharacter(currentInstruction);
+        await FadeScreen(currentInstruction);
+        HideText(currentInstruction);
+        Goto(currentInstruction);
+        await SetChoices(currentInstruction);
+        CreateVariable(currentInstruction);
+        SetVariable(currentInstruction);
+        Print(currentInstruction);
+        IfCommand(currentInstruction);
+        Repeat(currentInstruction);
+        End(currentInstruction);
+        Halt(currentInstruction);
 
         _programCounter++;
 
@@ -631,29 +180,29 @@ public class VNSInterpreter : MonoBehaviour
 
     private void OnTextBoxContinueInterpretingRequest(GameEventType eventType)
     {
-        if(_waitingTextBox)
+        if (_waitingTextBox)
             _waitingTextBox = false;
     }
 
-    private void OnFadeCompleted(GameEventType eventType) 
+    private void OnFadeCompleted(GameEventType eventType)
     {
-        if(_waitingFade)
+        if (_waitingFade)
             _waitingFade = false;
     }
 
-    private void OnChoiceMade(GameEventType eventType) 
+    private void OnChoiceMade(GameEventType eventType)
     {
         var e = (IntegerGameEvent)eventType;
         _programCounter = e.Value;
         _waitingChoice = false;
     }
 
-    private async UniTask PreLoad(List<string[]> script) 
+    private async UniTask PreLoad(List<string[]> script)
     {
 
         var branchStack = new Stack<int>();
 
-        for (int i = 0; i < script.Count; i++) 
+        for (int i = 0; i < script.Count; i++)
         {
 
             if (script[i].Length < 1)
@@ -664,7 +213,7 @@ public class VNSInterpreter : MonoBehaviour
                 _labels.Add(script[i][0], branchStack.Pop());
 
             //BRANCHS
-            if(script[i][0] == IF_COMMAND || script[i][0] == REPEAT_COMMAND)
+            if (script[i][0] == IF_COMMAND || script[i][0] == REPEAT_COMMAND)
                 branchStack.Push(i);
 
             if (script[i][0] == END_COMMAND)
@@ -703,13 +252,13 @@ public class VNSInterpreter : MonoBehaviour
     private float ResolveNumber(string value)
     {
 
-        if (float.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var f)) 
+        if (float.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var f))
             return f;
 
-        if(_numbers.ContainsKey(value))
+        if (_numbers.ContainsKey(value))
             return _numbers[value];
 
-        if(_strings.ContainsKey(value) && _labels.ContainsKey(_strings[value]))
+        if (_strings.ContainsKey(value) && _labels.ContainsKey(_strings[value]))
             return _labels[_strings[value]];
 
         if (_labels.ContainsKey(value))
@@ -720,7 +269,7 @@ public class VNSInterpreter : MonoBehaviour
 
     }
 
-    private string ResolveString(string value) 
+    private string ResolveString(string value)
     {
 
         if (_strings.ContainsKey(value))
@@ -732,7 +281,7 @@ public class VNSInterpreter : MonoBehaviour
 
     private bool ResolveBoolean(string value) => ResolveNumber(value) > 0;
 
-    private string GetPrintable(string parameter) 
+    private string GetPrintable(string parameter)
     {
 
         if (_numbers.ContainsKey(parameter))
@@ -747,5 +296,521 @@ public class VNSInterpreter : MonoBehaviour
         return parameter;
 
     }
+
+    //COMMANDS-----------------------------------------------------------------------------------------------------------------------------------------------------------
+    #region COMMANDS
+    //WAIT
+    private async UniTask Wait(string[] currentInstruction)
+    {
+        if (currentInstruction[0] == WAIT_COMMAND)
+        {
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var value = ResolveNumber(currentInstruction[1]);
+            await UniTask.Delay((int)value);
+        }
+    }
+
+    //SAY
+    private async UniTask Say(string[] currentInstruction)
+    {
+        if (currentInstruction[0] == SAY_COMMAND)
+        {
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            _waitingTextBox = true;
+
+            var textKey = ResolveString(currentInstruction[1]);
+
+            var name = currentInstruction.Length > 2 ? ResolveString(currentInstruction[2]) : null;
+
+            _sendTextToTextBox.Invoke(new SendTextToTextBoxGameEvent((string)textKey, (string)name));
+
+            await UniTask.WaitWhile(() => _waitingTextBox);
+
+        }
+    }
+
+    //BACKGROUND
+    private void Background(string[] currentInstruction)
+    {
+        if (currentInstruction[0] == BACKGROUND_COMMAND)
+        {
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var backgroundSprite = _spriteAssets[string.Format(BACKGROUNDS_PATH_FORMAT, currentInstruction[1])];
+
+            _changeBackgroundEvent.Invoke(new SpriteGameEvent(backgroundSprite));
+
+        }
+
+    }
+
+    //CREATE CHARACTER
+    private void CreateCharacter(string[] currentInstruction)
+    {
+        if (currentInstruction[0] == CREATE_CHARACTER_COMMAND)
+        {
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var name = ResolveString(currentInstruction[1]);
+
+            var sprite = currentInstruction.Length > 2 ? _spriteAssets[string.Format(CHARACTERS_PATH_FORMAT, currentInstruction[2])] : null;
+
+            var position = currentInstruction.Length > 3 ? (CharacterPosition)(int)ResolveNumber(currentInstruction[3]) : CHARACTER_DEFAULT_POSITION;
+
+            var offsetX = currentInstruction.Length > 4 ? ResolveNumber(currentInstruction[4]) : 0;
+
+            var offsetY = currentInstruction.Length > 5 ? ResolveNumber(currentInstruction[5]) : 0;
+
+            var inverted = currentInstruction.Length > 6 ? ResolveBoolean(currentInstruction[6]) : false;
+
+            _createCharacterEvent.Invoke(new CreateCharacterGameEvent(name, sprite, position, offsetX, offsetY, inverted));
+
+        }
+    }
+
+    //FADE SCREEN
+    private async UniTask FadeScreen(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == FADE_IN_SCREEN_COMMAND || currentInstruction[0] == FADE_OUT_SCREEN_COMMAND)
+        {
+
+            var duration = currentInstruction.Length > 1 ? ResolveNumber(currentInstruction[1]) : FADE_DEFAULT_DURATION;
+
+            var transitionMode = currentInstruction.Length > 2 ? (TransitionMode)(int)ResolveNumber(currentInstruction[2]) : FADE_DEFAULT_TRANSITION;
+
+            var ease = currentInstruction.Length > 3 ? (Ease)(int)ResolveNumber(currentInstruction[3]) : FADE_DEFAULT_EASE;
+
+            _waitingFade = true;
+
+            var fadeEvent = currentInstruction[0] == FADE_IN_SCREEN_COMMAND ? _startFadeInEvent : _startFadeOutEvent;
+
+            fadeEvent.Invoke(new FadeGameEvent(duration, transitionMode, ease));
+
+            await UniTask.WaitWhile(() => _waitingFade);
+
+        }
+    }
+
+    //HIDE TEXT
+    private void HideText(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == HIDE_TEXTBOX_COMMAND)
+        {
+            _hideTextBoxRequestEvent.Invoke(new NoArgGameEvent());
+        }
+    }
+
+    //GOTO
+    private void Goto(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == GOTO_COMMAND)
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                return;
+            }
+
+            var line = ResolveNumber(currentInstruction[1]);
+
+            _programCounter = (int)line;
+
+        }
+    }
+
+    //SET CHOICES
+    private async UniTask SetChoices(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == SET_CHOICES_COMMAND)
+        {
+
+            if (currentInstruction.Length < 3 || currentInstruction.Length % 2 == 0)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var choices = new List<ChoiceData>();
+
+            for (int i = 1; i < currentInstruction.Length; i += 2)
+            {
+
+                var choiceText = ResolveString(currentInstruction[i]);
+
+                var choiceLabel = ResolveNumber(currentInstruction[i + 1]);
+
+                choices.Add(new ChoiceData(choiceText, (int)choiceLabel));
+
+            }
+
+            _setChoicesRequestEvent.Invoke(new ChoiceArrayGameEvent(choices.ToArray()));
+
+            _waitingChoice = true;
+
+            await UniTask.WaitUntil(() => !_waitingChoice);
+
+        }
+    }
+
+    //CREATE VARIABLE
+    private void CreateVariable(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == VARIABLE_COMMAND)
+        {
+
+            if (currentInstruction.Length < 3)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var varKey = currentInstruction[1];
+
+            if (varKey.StartsWith(VARIABLE_NUMBER_PREFIX))
+            {
+                var varValue = ResolveNumber(currentInstruction[2]);
+                if (!_numbers.ContainsKey(varKey))
+                    _numbers.TryAdd(varKey, varValue);
+                else
+                {
+                    Debug.LogError(CreateErrorLog(VARIABLE_ALREADY_DEFINED_ERROR));
+                    _haltSignal = true;
+                    return;
+                }
+            }
+
+            else if (varKey.StartsWith(VARIABLE_STRING_PREFIX))
+            {
+                var varValue = ResolveString(currentInstruction[2]);
+                if (!_strings.ContainsKey(varKey))
+                    _strings.TryAdd(varKey, varValue);
+                else
+                {
+                    Debug.LogError(CreateErrorLog(VARIABLE_ALREADY_DEFINED_ERROR));
+                    _haltSignal = true;
+                    return;
+                }
+            }
+
+            else
+            {
+                Debug.LogError(CreateErrorLog(INVALID_VARIABLE_NAME_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+        }
+    }
+
+    //SET VARIABLE
+    private void SetVariable(string[] currentInstruction) 
+    {
+
+        if (currentInstruction[0].StartsWith(VARIABLE_NUMBER_PREFIX))
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var varKey = currentInstruction[0];
+
+            var varValue = (float)0;
+
+            if (_numbers.ContainsKey(varKey))
+            {
+                if (currentInstruction.Length == 2)
+                {
+                    varValue = ResolveNumber(currentInstruction[1]);
+                    _numbers[varKey] = varValue;
+                }
+                else
+                {
+                    varValue = ResolveNumber(currentInstruction[2]);
+                    switch (currentInstruction[1])
+                    {
+                        case "+":
+                            _numbers[varKey] += varValue;
+                            break;
+                        case "-":
+                            _numbers[varKey] -= varValue;
+                            break;
+                        case "*":
+                            _numbers[varKey] *= varValue;
+                            break;
+                        case "/":
+                            _numbers[varKey] /= varValue;
+                            break;
+                        case "%":
+                            _numbers[varKey] %= varValue;
+                            break;
+                        default:
+                            Debug.LogError(CreateErrorLog(INVALID_OPERATOR_ERROR));
+                            _haltSignal = true;
+                            return;
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+        }
+
+        if (currentInstruction[0].StartsWith(VARIABLE_STRING_PREFIX))
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var varKey = currentInstruction[0];
+
+            var varValue = string.Empty;
+            ResolveString(currentInstruction[1]);
+
+            if (_strings.ContainsKey(varKey))
+            {
+                if (currentInstruction.Length == 2)
+                {
+                    varValue = ResolveString(currentInstruction[1]);
+                    _strings[varKey] = varValue;
+                }
+                else if (currentInstruction[1] == "+")
+                {
+                    varValue = ResolveString(currentInstruction[2]);
+                    _strings[varKey] += varValue;
+                }
+                else
+                {
+                    Debug.LogError(CreateErrorLog(INVALID_OPERATOR_ERROR));
+                    _haltSignal = true;
+                    return;
+
+                }
+            }
+            else
+            {
+                Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+        }
+
+    }
+
+    //PRINT
+    private void Print(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == PRINT_COMMAND)
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var valueToPrint = string.Empty;
+
+            for (int i = 1; i < currentInstruction.Length; i++)
+            {
+                valueToPrint += GetPrintable(currentInstruction[i]) + ' ';
+            }
+
+            Debug.Log(valueToPrint);
+
+        }
+    }
+
+    //IF
+    private void IfCommand(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == IF_COMMAND)
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var result = false;
+
+            if (currentInstruction.Length == 2)
+                result = ResolveBoolean(currentInstruction[1]);
+
+            if (currentInstruction.Length > 3)
+            {
+
+                if (currentInstruction[1].StartsWith(VARIABLE_NUMBER_PREFIX) && currentInstruction[3].StartsWith(VARIABLE_NUMBER_PREFIX))
+                {
+
+                    if (!_numbers.ContainsKey(currentInstruction[1]) || !_numbers.ContainsKey(currentInstruction[3]))
+                    {
+                        Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                        _haltSignal = true;
+                        return;
+                    }
+
+                    if (currentInstruction[2] == "==")
+                        result = _numbers[currentInstruction[1]] == _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "!=")
+                        result = _numbers[currentInstruction[1]] != _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == ">")
+                        result = _numbers[currentInstruction[1]] > _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "<")
+                        result = _numbers[currentInstruction[1]] < _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == ">=")
+                        result = _numbers[currentInstruction[1]] >= _numbers[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "<=")
+                        result = _numbers[currentInstruction[1]] <= _numbers[currentInstruction[3]];
+
+                }
+
+                else if (currentInstruction[1].StartsWith(VARIABLE_STRING_PREFIX) && currentInstruction[3].StartsWith(VARIABLE_STRING_PREFIX))
+                {
+
+                    if (!_strings.ContainsKey(currentInstruction[1]) || !_strings.ContainsKey(currentInstruction[3]))
+                    {
+                        Debug.LogError(CreateErrorLog(VARIABLE_NOT_DEFINED_ERROR));
+                        _haltSignal = true;
+                        return;
+                    }
+
+                    if (currentInstruction[2] == "==")
+                        result = _strings[currentInstruction[1]] == _strings[currentInstruction[3]];
+
+                    if (currentInstruction[2] == "!=")
+                        result = _strings[currentInstruction[1]] != _strings[currentInstruction[3]];
+
+                }
+
+                else
+                {
+                    Debug.LogError(CreateErrorLog(IF_VARIABLE_TYPE_ERROR));
+                    _haltSignal = true;
+                    return;
+
+                }
+
+            }
+
+            if (!result)
+                _programCounter = _branchs[_programCounter];
+
+        }
+    }
+
+    //REPEAT
+    private void Repeat(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == REPEAT_COMMAND)
+        {
+
+            if (currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            if (_repeatCounters.ContainsKey(_programCounter))
+            {
+                _programCounter++;
+                return;
+            }
+
+            var repeatCount = (int)ResolveNumber(currentInstruction[1]);
+
+            if (repeatCount <= 0)
+            {
+                _programCounter = _branchs[_programCounter];
+                return;
+            }
+
+            _repeatCounters.Add(_programCounter, (int)ResolveNumber(currentInstruction[1]));
+
+        }
+    }
+
+    //END
+    private void End(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == END_COMMAND)
+        {
+
+            var startLine = _branchs.First(x => x.Value == _programCounter).Key;
+
+            if (_repeatCounters.ContainsKey(startLine))
+            {
+                _repeatCounters[startLine]--;
+
+                if (_repeatCounters[startLine] > 0)
+                {
+                    _programCounter = startLine;
+                    return;
+                }
+                else
+                {
+                    _repeatCounters.Remove(startLine);
+                }
+            }
+
+        }
+    }
+
+    //HALT
+    private void Halt(string[] currentInstruction) 
+    {
+        if (currentInstruction[0] == HALT_COMMAND)
+        {
+            _haltSignal = true;
+            return;
+        }
+    }
+    #endregion-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }
