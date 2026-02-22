@@ -34,7 +34,11 @@ public class VNSInterpreter : MonoBehaviour
 
     private Dictionary<string, float> _numbers = new();
 
+    private Dictionary<string, List<int>> _numberLists = new();
+
     private Dictionary<string, string> _strings = new();
+
+    private Dictionary<string, List<string>> _stringLists = new();
 
     private Dictionary<int, int> _branchs = new();
 
@@ -73,6 +77,7 @@ public class VNSInterpreter : MonoBehaviour
     private const string GOTO_COMMAND = "goto";
     private const string SET_CHOICES_COMMAND = "set-choices";
     private const string VARIABLE_COMMAND = "var";
+    private const string CREATE_LIST_COMMAND = "create-list";
     private const string PRINT_COMMAND = "print";
     private const string IF_COMMAND = "if";
     private const string REPEAT_COMMAND = "repeat";
@@ -96,6 +101,8 @@ public class VNSInterpreter : MonoBehaviour
     private const string VARIABLE_ALREADY_DEFINED_ERROR = "Variable already defined";
     private const string VARIABLE_NOT_DEFINED_ERROR = "Variable not defined";
     private readonly string INVALID_VARIABLE_NAME_ERROR = $"Invalid variable name. Variable names must start with '{VARIABLE_NUMBER_PREFIX}'(number) or '{VARIABLE_STRING_PREFIX}'(string)";
+    private const string LIST_ALREADY_DEFINED_ERROR = "List already defined";
+    private readonly string INVALID_LIST_NAME_ERROR = $"Invalid list name. List names must start with '{VARIABLE_NUMBER_PREFIX}'(number) or '{VARIABLE_STRING_PREFIX}'(string)";
     private const string IF_VARIABLE_TYPE_ERROR = "IF statement overloads with more than one parameter should take variables(not literal values) of the same type as arguments";
     private const string INVALID_OPERATOR_ERROR = "Invalid operator";
 
@@ -630,6 +637,70 @@ public class VNSInterpreter : MonoBehaviour
                 return;
             }
 
+        }
+
+    }
+
+    //CREATE LIST
+    private void CreateList(string[] currentInstruction) 
+    {
+
+        if (currentInstruction[0] == CREATE_LIST_COMMAND) 
+        {
+
+            if(currentInstruction.Length < 2)
+            {
+                Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+            var listKey = currentInstruction[1];
+
+            if(listKey.StartsWith(VARIABLE_NUMBER_PREFIX))
+            {
+                if (!_numberLists.ContainsKey(listKey))
+                    _numberLists.Add(listKey, new List<int>());
+                else
+                {
+                    Debug.LogError(CreateErrorLog(LIST_ALREADY_DEFINED_ERROR));
+                    _haltSignal = true;
+                    return;
+                }
+            }
+
+            else if (listKey.StartsWith(VARIABLE_STRING_PREFIX))
+            {
+                if (!_stringLists.ContainsKey(listKey))
+                    _stringLists.Add(listKey, new List<string>());
+                else
+                {
+                    Debug.LogError(CreateErrorLog(LIST_ALREADY_DEFINED_ERROR));
+                    _haltSignal = true;
+                    return;
+                }
+            }
+
+            else
+            {
+                Debug.LogError(CreateErrorLog(INVALID_LIST_NAME_ERROR));
+                _haltSignal = true;
+                return;
+            }
+
+        }
+
+    }
+
+    //ADD LIST
+    private void ListAdd(string[] currentInstruction) 
+    {
+
+        if (currentInstruction.Length < 3)
+        {
+            Debug.LogError(CreateErrorLog(INVALID_ARGUMENT_NUMBER_ERROR));
+            _haltSignal = true;
+            return;
         }
 
     }
